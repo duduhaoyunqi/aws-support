@@ -1,0 +1,54 @@
+Question：
+无法RDP到实例问题
+
+########################################################################
+
+您好:
+
+以下总结会议上的内容。
+
+	1. 目前问题定位在客户端使用"vMatrix Server Manager"去修改应用的端口，但不小心修改到RDP的端口到13389造成无法远程桌面连接进入。
+
+	2. 会议上我们在好的实例上使用命令 Test-NetConnection 10.133.41.149 -Port 3389 确认端口是没有响应的，但在编辑安全组规则允许 TCP 13389端口号是有响应，但还是无法使用RDP连接。
+
+	3. 后续问题排除有两个方案:
+		a. 使用Rescue实例尝试将RDP服务修改回默认值3389。
+		b. 使用快照还原到今天凌晨作的备份。
+
+########################################################################
+
+您好:
+
+以下总结会议上的协助内容。
+
+	1. 在操作Rescue实例时，必须要是不同的操作系统与镜像，所以建议使用官方的镜像来创建Rescue实例，在会议上因为使用的是相同的客制化镜像，所以造成冲突问题，以下是微软文件提到Disk Signature冲突的问题与手动排除的方式。
+	https://techcommunity.microsoft.com/t5/windows-blog-archive/fixing-disk-signature-collisions/ba-p/724114 
+
+	2. 使用EC2Rescue工具在test上运行失败，所以我们使用官方镜像创建的实例test2来运行EC2Rescue工具，但这操作无法排除Disk Signature冲突的问题。
+	
+	3. 最后我们使用今天凌晨的快照来创建新的系统卷，使用系统卷挂载回原本的服务后，确认使用3389端口可以连接进入。
+	
+	4. 最后我们删除test和test2这两台Rescue实例，您可以再和客户确认是否有数据缺失，您可以挂载回原本的卷做数据的拷贝。
+
+########################################################################
+
+请问创建linux实例不指定密钥对，userdata中需要怎么填？
+
+########################################################################
+
+您好:
+
+由于我对于Linux命令不熟，所以我花费了一点时间进行测试，以下userdata命令可以启用密码验证和设置密码到用户ec2-user上。另外实际测试Linux密码复杂度要求比较高，类似P@ssword1的密码都不会通过，所以您必须注意使用的密码是否可以通过密码复杂度的要求，两个密码必须相同并且中间必须夹带\n。
+
+以下脚本是在Amazon Linux 2的环境测试通过，如果您在其他Linux环境上使用，需要确认默认的用户是否为ec2-user，或是passwd命令是否存在。
+
+======Don't copy======
+#!/bin/bash
+sed -i "/^[^#]*PasswordAuthentication[[:space:]]no/c\PasswordAuthentication yes" /etc/ssh/sshd_config
+systemctl restart sshd.service
+sudo echo -e "<yourpassword>\n<yourpassword>" | sudo passwd ec2-user
+======Don't copy======
+
+要连接时您可以使用以下ssh命令，输入密码后就可以登陆Linux环境
+
+ssh ec2-user@xxx.xxx.xxx.xxx 
