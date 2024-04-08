@@ -1,0 +1,13 @@
+Question:
+如何能确认Security Groups关联了哪些资源？ 
+##############################################
+您好，
+
+您可以透过控制台或是AWS CLI的方式查看与特定安全组关联的资源。
+为避免案例篇幅冗长不易阅读，详细操作办法您可以参考这份文档[+]
+
+[+]如何查找与 Amazon EC2 安全组关联的资源？ - https://repost.aws/zh-Hans/knowledge-center/ec2-find-security-group-resources 
+
+以根据安全组 ID 查找与安全组关联的网络接口
+```
+aws ec2 describe-network-interfaces --filters Name=group-id,Values=<group-id> --region <region> --output json
