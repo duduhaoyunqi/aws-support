@@ -20,6 +20,12 @@ issue:
 您好！
 
 为了能够进一步地了解问题的起因，这里要麻烦您提供以下信息。
+1. 当前主机使用的 DNS 服务器是否为 VPC 的默认 DNS (10.133.32.2 / 169.254.169.253)
+2. 是否可以提供以下指令的输出：
+    访问默认的 DNS Server:
+        nslookup monitoring.ap-southeast-1.amazonaws.com
+    使用 VPC DNS Resolver
+        nslookup monitoring.ap-southeast-1.amazonaws.com 169.254.169.253 
 
 i-0870dc3053e3958e1 (没问题的实例）请提供以下指令的输出。
 nslookup monitoring.ap-southeast-1.amazonaws.com 10.113.13.224
