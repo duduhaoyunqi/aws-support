@@ -1,7 +1,7 @@
 Issue：
 实例底层故障的问题StatusCheckFailed_System，我们想创建ec2 auto recovery的方式来自动化恢复实例，从而不需要AWS 参与就可以恢复实例，减少宕机时间。
 
-
+##################################################################################
 
 您好，
 我们可以缩为两个操作：
@@ -72,4 +72,32 @@ aws ec2 describe-instances \
     --output text --max-items 10000 --region $aws_region
 
 [1] https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html#:~:text=the%20tag%20value.-,tenancy,-%2D%20The%20tenancy%20of
+
+###########################################################
+
+您好，
+
+测试给两个实例循环添加alarm有有空格报错。
+目前初步在指令中并未看到可见的空格，但不排除可能有其他非可见的字元，如 \r \n 等，为了进一步确认，是否可以请您在运行指令时，在 --region $aws_region 替换为以下指令：
+
+--region $aws_region --debug 2>&1 | cat >> log.txt
+
+并提供 log.txt ，以进行确认。
+
+###########################################################
+#sed 's/\\r//g'去除空格操作即可。
+
+for ec2_id in ${ec2_ids} ; do
+    new_ec2_id=$(echo $ec2_id | sed 's/\\r//g')
+    aws cloudwatch put-metric-alarm \
+        --alarm-name "(S4)EC2:cpu_used_percent:*${new_ec2_id}" \
+        --alarm-description "Alarm when CPU exceeds 70 percent" \
+        --metric-name CPUUtilization --namespace AWS/EC2 --statistic Average --period 60 \
+        --threshold 70 --comparison-operator GreaterThanThreshold \
+        --dimensions "Name=InstanceId,Value=${new_ec2_id}" --evaluation-periods 10  --unit Percent \
+        --treat-missing-data  breaching \
+        --region $aws_region
+done
+
+
 
