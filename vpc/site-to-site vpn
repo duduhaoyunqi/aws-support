@@ -1,0 +1,107 @@
+Question: 如图aws架构.png，客户的site-to-site vpn 可不可以直接连接到 ec2实例，中间必须经过transit gateway吗？
+###################################################################
+
+客户您好,
+
+感谢您联系AWS技术支持, 我是工程师Ken, 很荣幸今日能够协助您的案例.
+
+理解您希望了解site-to-site VPN是否需要搭配TGW. 若我有任何遗漏或误解之处, 请补充指正.
+
+VPN可以使用VGW或TGW来连接VPC, VGW是一对一个VPC, TGW是一对多个VPC.
+
+从图中我观察到您在AWS上有2个VPC, 中间用了VPC Peering打通.
+
+如果您需要从地端办公室同时连到2个VPC, 会需要要使用TGW, 然后把2个VPC都关联到TGW上.
+
+如果您只需要从端办公室连到internal VPC, 您可以考虑使用VGW. VGW是一对一的, VGW只可以关联一个VPC, 而且地端办公室不可以利用VPN -> VPC Peering 访问external VPC [1] .
+
+希望以上的资讯对您有所帮助, 若还有其他需要帮助的地方, 请随时与我们联系, 谢谢.
+
+===== reference =====
+
+[1] VPC peering limitations
+https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-limitations 
+
+#####################################################################
+
+地端办公室不可以利用VPN -> VPC Peering 访问external VPC 这是什么意思？
+
+#####################################################################
+
+客户您好,
+
+感谢您的回覆.
+
+因为VPC Peering不支持"传递的对等"[1], 意思是VPC Peering只支持相连的2个VPC通信, 不可以经过VPC Peering路由到对端VPC以外的网络.
+
+以您的图为例, VPC Peering打通了internal VPC和external VPC, 所以只有这2个VPC可以经过VPC Peering通信. VPN (VGW)在internal VPC, 所以external VPC不能通过VPC Peering再路由到VPN, 同样道理, 地端可以用VPN打通internal VPC, 但不能再经过VPC Peering路由到external VPC.
+
+要全部打通, 一定要使用TGW才可以, 架构图请参考[2].
+
+希望以上的资讯对您有所帮助, 若还有其他需要帮助的地方, 请随时与我们联系, 谢谢.
+
+===== reference =====
+
+[1] VPC peering limitations
+https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-basics.html#vpc-peering-limitations 
+
+[2] AWS Transit Gateway + AWS Site-to-Site VPN
+https://docs.aws.amazon.com/whitepapers/latest/aws-vpc-connectivity-options/aws-transit-gateway-vpn.html 
+
+#####################################################################
+
+1：图中WAF支持只允许80和443的端口的流量 这种功能吗？安全组可以做到只放开80和443，WAF也可以吗？
+2：地端访问私有子网实例走vpn，地端访问公有子网实例走公网的这种架构，在两个实例打通后，如果不仅仅放通1443端口，假如全放开，流量会串吗？还会是架构的流量走向吗？
+
+#####################################################################
+
+客户您好,
+
+感谢您的回覆.
+
+1. WAF是ALB上的一个额外服务, 用来检查application layer的攻击. 所以是ALB先接收到请求, 然后再经过WAF检查. 所以要开放什么port是从ALB的配置去控制.
+
+2. VPC Peering是layer 3的服务, 以路由打通VPC. 要开放什么port需要用资源(e.g. EC2)的全安组去控制. 如果前一個回覆有提到, VPC Peering只可以打通對端的VPC, 所以理論上2端的VPC可以互通, 不會在VPC Peering被擋. 
+
+#####################################################################
+
+假如internal vpc中有一个数据库需要连接外网进行更新，由于现在的架构是不能连接互联网的，所以需要在internal vpc中放一个NAT网关，这样这个内网的数据库就可以通过这个NAT Gateway发送所有请求流量到互联网，我的疑问是NAT网关的流量只出不进，那回包怎么回给内网数据库进行更新？是因为tcp连接已经建立所以可以返回到数据库吗？
+
+#####################################################################
+
+客户您好,
+
+感谢您的回覆.
+
+是的, 您的理解是对的. 连线从VPC发起, 经过NAT Gateway, NAT Gateway会记住source IP/port, 再把转换成NAT Gateway的IP. 回来的流量会先回到NAT Gateway, 所以NAT Gateway知道流量是属于哪一台机器.
+
+NAT Gateway只接受从VPC内发起的连线, 从公网发起皫不能主动连到VPC内部的机器.
+
+更多关于NAT Gateway的使用及设计, 可以参考此文件[1]
+
+希望以上的资讯对您有所帮助, 若还有其他需要帮助的地方, 请随时与我们联系, 谢谢.
+
+===== reference =====
+
+[1] NAT gateway use cases
+https://docs.aws.amazon.com/vpc/latest/userguide/nat-gateway-scenarios.html 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
