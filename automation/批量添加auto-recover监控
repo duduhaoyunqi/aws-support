@@ -1,0 +1,75 @@
+Issue：
+实例底层故障的问题StatusCheckFailed_System，我们想创建ec2 auto recovery的方式来自动化恢复实例，从而不需要AWS 参与就可以恢复实例，减少宕机时间。
+
+
+
+您好，
+我们可以缩为两个操作：
+    - 列出所有 EC2  [1]
+    - 设置 alarm [2]
+
+以下为示例：
+＝＝＝＝＝＝＝＝
+aws_region=ap-southeast-1
+sns_arn=arn:aws:sns:us-east-1:111122223333:MyTopic
+
+
+ec2_ids=$(
+aws ec2 describe-instances \
+    --filters "Name=instance-state-name,Values=running" \
+    --query "Reservations[*].Instances[*].[InstanceId]" \
+    --output text --max-items 10000 --region $aws_region
+)
+
+for ec2_id in ${ec2_ids} ; do
+    aws cloudwatch  put-metric-alarm \
+        --alarm-name "awsec2-${ec2_id}-GreaterThanOrEqualToThreshold-StatusCheckFailed_System" \
+        --alarm-description "Alarm on instance ${ec2_id}: Triggered when StatusCheckFailed_System >= 0.99 for 2 consecutive 1-minute periods." \
+        --actions-enabled \
+        --alarm-actions "arn:aws:automate:${aws_region}:ec2:recover" \
+                        "$sns_arn" \
+        --metric-name StatusCheckFailed_System \
+        --namespace AWS/EC2 \
+        --statistic Maximum --period 60 --threshold 0.99 --comparison-operator GreaterThanOrEqualToThreshold \
+        --dimensions "Name=InstanceId,Value=${ec2_id}" --evaluation-periods 2 \
+        --treat-missing-data  breaching \
+        --region $aws_region
+done
+＝＝＝＝＝＝＝＝
+
+同时您会需要留意，并非所有的 EC2 类型都可以，您可以查看此文档 [3] 确认该 EC2 类型是否支持。
+
+与此同时，EC2 当前状态必须为 Running 才可以设置上 ec2:recover 。
+
+[1] https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html#:~:text=%7D%0A%20%20%20%20...%0A%5D-,Example%209,-%3A%20To%20filter%20instances 
+[2] https://docs.aws.amazon.com/cli/latest/reference/cloudwatch/put-metric-alarm.html 
+[3] https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-recover.html#requirements-for-recovery 
+
+###########################################################################
+
+您好，
+
+Name 主要透过 tag Name 去添加。您可以使用 tag: 来使用 tag 来过滤，若您有多个条件，则可以一样使用空格分离，并提供多个条件，如
+--filters "Name=instance-state-name,Values=running" "Name=affinity,Values=default" "Name=tag:Name,Values=server"
+
+--alarm-name不变的情况下put-metric-alarm是修改。说明无法修改alarm-name，alarm-name变了就是新增。
+与您测试的一样，当名称相同时，就会进行覆盖，意味着：
+- 若您要调整现有的告警，您可以直接使用相同名称覆盖
+- 若您要更新名称，则需要用新的名称创建新的告警，再删除现有的告警
+
+对于 DDH ，需要透过 tenancy 这个参数来获取 [1] (host 或是 dedicated)。
+aws ec2 describe-instances \
+    --filters "Name=instance-state-name,Values=running" "Name=tenancy,Values=host,dedicated" \
+    --query "Reservations[*].Instances[*].[InstanceId]" \
+    --output text --max-items 10000 --region $aws_region
+
+若是非 DDH，则是仅抓取 default 的。
+
+如：
+aws ec2 describe-instances \
+    --filters "Name=instance-state-name,Values=running" "Name=tenancy,Values=default" \
+    --query "Reservations[*].Instances[*].[InstanceId]" \
+    --output text --max-items 10000 --region $aws_region
+
+[1] https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html#:~:text=the%20tag%20value.-,tenancy,-%2D%20The%20tenancy%20of
+
