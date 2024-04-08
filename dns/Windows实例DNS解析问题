@@ -1,0 +1,151 @@
+issue:
+2024-03-27T05:41:34Z E! cloudwatch: code: RequestError, message: send request failed, original error: Post "https://monitoring.ap-southeast-1.amazonaws.com/ ": dial tcp: lookup monitoring.ap-southeast-1.amazonaws.com: no such host
+
+Key 您好，
+
+感谢您联系AWS技术支持团队，我是工程师Mingkai,很荣幸能协助您解决相关问题。
+
+今天会议中与您沟通了如下问题:
+--您在 i-00c1757651ed82df9 CloudWatch agent 的日志中看到“2024-03-27T05:41:34Z E! cloudwatch: code: RequestError, message: send request failed, original error: Post "https://monitoring.ap-southeast-1.amazonaws.com/ ": dial tcp: lookup monitoring.ap-southeast-1.amazonaws.com: no such host” 这样的报错信息。显示DNS解析异常
+--检查Cloudwatch agent 配置文件，可以看到在log选项下，您有配置 endpoint_override 字段，选择将日志发送到VPC 终端节点 (vpce-0ffd85094d9ab1187-uws94785.logs.ap-southeast-1.vpce.amazonaws.com) credentials 使用的是以7*******4305结尾的账号。
+--同时我们检查了位于同一个VPC 和子网下的EC2 i-0870dc3053e3958e1 的配置，使用同样的权限将日志发送到同样的VPC终端节点，其可以正常工作。
+--经过以上我们可以排除CLoudWatch Agent 和VPC 终端节点的配置问题。
+
+--同时我们分别使用两台EC2测试了DNS解析和网络路径的连通性：
+ i-00c1757651ed82df9 使用 DNS resolver 10.133.13.224 无法拿到response，但是使用telnet可以连接VPC终端节点的IP地址。由于这是内网环境，所以切换到公共DNS resolver 8.8.8.8 同样无法正常解析。
+ i-0870dc3053e3958e1 使用DNS resolver 10.133.13.224 可以正常拿到response，可以正常连接VPC终端节点。
+
+您好！
+
+为了能够进一步地了解问题的起因，这里要麻烦您提供以下信息。
+
+i-0870dc3053e3958e1 (没问题的实例）请提供以下指令的输出。
+nslookup monitoring.ap-southeast-1.amazonaws.com 10.113.13.224
+nslookup monitoring.ap-southeast-1.amazonaws.com 10.113.13.82
+nslookup monitoring.ap-southeast-1.amazonaws.com 10.133.32.2
+ipconfig /all
+
+i-00c1757651ed82df9 (有问题的实例）请提供以下指令的输出。
+nslookup monitoring.ap-southeast-1.amazonaws.com 10.133.40.2
+nslookup monitoring.ap-southeast-1.amazonaws.com 8.8.8.8
+nslookup alpha.lftltd.net
+nslookup amazon.com
+tnc 10.113.13.224 -port 53
+tnc 10.133.40.2 -port 53
+tnc 8.8.8.8 -port 53
+
+客户您好,
+
+感谢您刚才在Chime远程会议的讨论。
+
+底下整理我们的讨论给您参考：
+
+1. 您 CloudWatch Agent 的配置档分成 metrics 和 logs 两部分。
+    metrics 的部分用的是默认的 monitoring.ap-southeast-1.amazonaws.com 这个 endpoint
+    logs 的部分使用的是 override 的 vpce-0ffd85094d9ab1187-uws94785-ap-southeast-1b.logs.ap-southeast-1.vpce.amazonaws.com 这个 endpoint
+
+2. 您的 EC2 服务器有加域，DNS 用的是域控的 IP
+    使用 nslookup 工具解析上面两个 endpoint：
+
+    域控 返回
+      monitoring.ap-southeast-1.amazonaws.com --> public IP 地址
+      vpce-0ffd85094d9ab1187-uws94785-ap-southeast-1b.logs.ap-southeast-1.vpce.amazonaws.com  -->  10.133.13.249
+
+    VPC默认的DNS (10.133.32.2) 返回
+      monitoring.ap-southeast-1.amazonaws.com --> private IP 地址
+      vpce-0ffd85094d9ab1187-uws94785-ap-southeast-1b.logs.ap-southeast-1.vpce.amazonaws.com  -->  10.133.13.249
+
+    这是因为您在 vpc-077c009402a41c5da 有创建 monitoring 的 VPC Endpoint 的缘故。
+
+3. 若是还在有遇到 DNS 解析失败的情况，您可以先在 hosts 手动添加上 IP 解析的记录。
+
+以上的信息提供给您参考。
+
+#file_amazon-cloudwatch-agent-windows-coreapp-prod配置文件
+{
+	"metrics": {
+		"aggregation_dimensions": [
+			[
+				"InstanceId"
+			]
+		],
+		"append_dimensions": {
+			"ImageId": "${aws:ImageId}",
+			"InstanceId": "${aws:InstanceId}",
+			"InstanceType": "${aws:InstanceType}"
+		},
+		"metrics_collected": {
+			"Processor": {
+				"measurement": [
+					"% Interrupt Time",
+					"% Processor Time"
+				],
+				"metrics_collection_interval": 60,
+				"resources": [
+					"*"
+				]
+			},
+			"Memory": {
+				"measurement": [
+					"% Committed Bytes In Use",
+					"% Committed Bytes",
+					"% Paging File Usage"
+				],
+				"metrics_collection_interval": 60
+			},
+			"LogicalDisk": {
+				"measurement": [
+					"% Free Space"
+				],
+				"metrics_collection_interval": 60,
+				"resources": [
+					"*"
+				]
+			},
+			"PhysicalDisk": {
+				"measurement": [
+					"Avg. Disk sec/Transfer",
+					"Disk Transfers/sec"
+				],
+				"metrics_collection_interval": 60,
+				"resources": [
+					"*"
+				]
+			},
+			"Network Interface": {
+				"measurement": [
+					"Bytes Received/sec",
+					"Bytes Sent/sec"
+				],
+				"metrics_collection_interval": 60,
+				"resources": [
+					"*"
+				]
+			}
+		}
+	},
+	"logs": {
+		"logs_collected": {
+			"windows_events": {
+				"collect_list": [
+					{
+						"event_name": "System",
+						"event_levels": [
+							"INFORMATION",
+							"WARNING",
+							"ERROR",
+							"CRITICAL"
+						],
+						"log_group_name": "AWS-CoreApp-Prod-Windows",
+						"log_stream_name": "{local_hostname}"
+					}
+				]
+			}
+		},
+		"log_stream_name": "{local_hostname}",
+		"endpoint_override": "vpce-0ffd85094d9ab1187-uws94785.logs.ap-southeast-1.vpce.amazonaws.com",
+		"credentials": {
+			"role_arn": "arn:aws:iam::707935184305:role/CrossAccountLogsRole"
+		}
+	}
+}
