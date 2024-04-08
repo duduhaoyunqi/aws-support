@@ -1,0 +1,45 @@
+Question:
+设定统计的时间周期为11/1号-11/30号，将这个月每个实例的以下4个指标作为一条日志流发送到日志组保留。
+每个日志流的内容格式为这个实例id，cpu大小和这个月内这个实例的cpu利用率的最大值，还有这个月内这个实例的cpu利用率超过80%的时间占比。
+我理解第3和4指标需要计算出来。
+请问如何计算并将以上所需要的4个指标作为一条日志流写入到日志组中，假如我有10个实例，应该保存有10个日志流。
+
+########################################################################
+
+尊敬的客戶：
+
+我了解到您目前希望按一个月的周期为实例自定义日志并将下方四个数据作为一条事件发送到日志组内：
+1.实例id
+2.实例cpu大小
+3.本月实例的cpu利用率的最大值
+4.本月cpu利用率超过80%的时间占比
+如果我对此理解有不周到的地方还望您及时指正。
+
+对于您的以上要求，很遗憾我们目前并沒有可以直接推送到日志组的办法。但您可以通过自行编写script分别执行api call来获得这些数据，记录在日志中，再使用代理进行日志的上传：
+1. 实例的id，以及本月实例cpu利用率最大值
+您可以通过执行GetMetricData 来进行获得，包括实例的名称以及本月利用率平均最大值，区间（您可以用一个月），统计（选择avg），label使用
+ "Label": "CPUUtilization, peak of ${MAX} was at ${MAX_TIME}",来获得本月平均cpu利用率的最大值。【1】【2】
+https://awscli.amazonaws.com/v2/documentation/api/latest/reference/cloudwatch/get-metric-data.html 
+example输出：
+https://docs.aws.amazon.com/zh_cn/AmazonCloudWatch/latest/APIReference/API_GetMetricData.html#API_GetMetricData_Example_3 
+
+2.利用率超过80%的时间占比：
+对于这个指标，我们没有可以直接使用的数据，因此我们可以考虑用GetMetricData api 先将一个月内按五分钟的区间，将所有数据返回出来再按下方公式进行计算，请注意这种计算方式也只能给您一个大概的占比。
+时间占比=（超过80%的数据点*5分钟）/（数据点总数*5分钟）=超过80%数据点/总数据点
+
+3.实例cpu大小：
+如果希望查看cpu的实际大小，则您可以通过具体的查看本机的命令行，例如，Linux可以使用lscpu，返回的结果可以进行计算：
+Thread(s) per core:  2
+Core(s) per socket:  4
+2*4 = 8 vCPU
+
+在您将上方四个参数数据拿到后写入日志，则可以根据下方文档来为每个实例配置cloudwatch 代理文件，并将对应日志上传至日志组中：【3】
+https://docs.aws.amazon.com/zh_cn/AmazonCloudWatch/latest/monitoring/CloudWatch-Agent-Configuration-File-Details.html#CloudWatch-Agent-Configuration-File-Logssection 
+
+以上信息提供给您，希望对您有所帮助。与此同时，如果您有任何其他问题或者如果需要我协助的，请随时与我联系。谢谢您！
+希望您能拥有美好的一天, 祝工作顺利！
+
+reference:
+1.https://awscli.amazonaws.com/v2/documentation/api/latest/reference/cloudwatch/get-metric-data.html 
+2.https://docs.aws.amazon.com/zh_cn/AmazonCloudWatch/latest/APIReference/API_GetMetricData.html#API_GetMetricData_Example_3 
+3.https://docs.aws.amazon.com/zh_cn/AmazonCloudWatch/latest/monitoring/CloudWatch-Agent-Configuration-File-Details.html#CloudWatch-Agent-Configuration-File-Logssection 
