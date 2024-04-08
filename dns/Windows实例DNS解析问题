@@ -155,3 +155,71 @@ tnc 8.8.8.8 -port 53
 		}
 	}
 }
+
+####################################################################################
+
+您好，
+
+1. 烦请您打开事件查看器（eventvwr），然后将其中的“Windows logs”中的System ， Security和Application这三个日志保存并发送给我们
+2. 烦请您将在powershell中执行systeminfo的结果发送给我们。
+
+####################################################################################
+
+PS C:\Windows\system32> systeminfo
+
+Host Name:                 WVWSPSETHDMPD01
+OS Name:                   Microsoft Windows Server 2016 Standard
+OS Version:                10.0.14393 N/A Build 14393
+OS Manufacturer:           Microsoft Corporation
+OS Configuration:          Member Server
+OS Build Type:             Multiprocessor Free
+Registered Owner:          ITS
+Registered Organization:   Li & Fung (Trading) Ltd.
+Product ID:                00377-60000-00000-AA309
+Original Install Date:     11/27/2019, 4:28:50 PM
+System Boot Time:          2/18/2024, 10:31:22 PM
+System Manufacturer:       Amazon EC2
+System Model:              c5.xlarge
+System Type:               x64-based PC
+Processor(s):              1 Processor(s) Installed.
+                           [01]: Intel64 Family 6 Model 85 Stepping 4 GenuineIntel ~3000 Mhz
+BIOS Version:              Amazon EC2 1.0, 10/16/2017
+Windows Directory:         C:\Windows
+System Directory:          C:\Windows\system32
+Boot Device:               \Device\HarddiskVolume1
+System Locale:             en-us;English (United States)
+Input Locale:              en-us;English (United States)
+Time Zone:                 (UTC+07:00) Bangkok, Hanoi, Jakarta
+Total Physical Memory:     7,836 MB
+Available Physical Memory: 1,671 MB
+Virtual Memory: Max Size:  12,236 MB
+Virtual Memory: Available: 5,404 MB
+Virtual Memory: In Use:    6,832 MB
+Page File Location(s):     C:\pagefile.sys
+Domain:                    alpha.lftltd.net
+Logon Server:              \\WVWSPSETHDMPD01
+Hotfix(s):                 24 Hotfix(s) Installed.
+                           [01]: KB5031989
+                           [02]: KB3199986
+
+############################################################################################
+
+您好，非常感谢您联系我们
+
+我们分析了您的上传的最新日志，综合案例170865919101440案例开启的时间，我们将问题影响的范围确定在了2024-2-23 03：33 UTC+0 之前和之后的24小时。
+结果发现这样一些日志信息：
+2/23/2024 3:30:11 AM
+A request to allocate an ephemeral port number from the global UDP port space has failed due to all such ports being in use.
+”从全局UDP端口空间分配临时端口号的请求失败，因为所有此类端口都在使用中。“
+如果本地端口耗尽（包括TCP和UDP），那么确实会出现无法正常进行内外访问的情况。系统的报错中也确实出现了诸如丢失与域控的连接。组策略连接丢失这样的报错信息。（https://learn.microsoft.com/en-us/troubleshoot/windows-client/networking/tcp-ip-port-exhaustion-troubleshooting）  对于Windows来说，通常TCP的连接数和UDP的连接数是分开单独管理的。 我们在报错中看到的也是UDP的耗尽信息，所以我们先来进行UDP这部分的排查。
+
+一般来说，在进行DNS解析时，会自动分配一个本地的UDP端口来尝试联系目标DNS Server的 UDP53端口。 那么我们接下来就看看究竟是那个服务需要占用如此多的本地UDP端口号。
+（不过，有一点让我同样在意的是，似乎这个问题并没有固定在2月23日，之前的很多时间也出现过类似的情况。 ）
+1.您可以在powershell中执行netstat -ano -p udp 看看当前活动的UDP连接。
+2.请注意查看PID，这代表了进程的ID，您可以找到最频繁出现的PID（这里以PID 1536举例）
+例如 Get-Process -Id 1536
+如果结果是svchost的话，那么您可以执行如下命令来获取背后真正的进程名：
+tasklist /svc /fi "PID eq 1536"
+3.如果方便的话，烦请您提供一下powershell下执行get-process 的结果。
+4.对于域控来说，通常其DNS也是支持TCP协议进行解析的，所以在测试UDP的同时，我们也希望您可以测试一下TCP 53端口的连通性。
+Test-NetConnection 10.133.32.2（您的域控DNS） -port 53
