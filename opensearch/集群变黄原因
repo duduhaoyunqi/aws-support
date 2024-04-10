@@ -1,0 +1,94 @@
+集群状态黄色的原因是因为所有索引的主分片都分配到了集群下的节点中，但是至少有一个索引的副本分片没有分配到节点, 或者是节点的磁盘空间不足导致无法分配副本分片到节点中。
+A yellow cluster status means the primary shards for all indexes are allocated to nodes in a cluster, but the replica shards for at least one index aren't. Lack of disk space can also cause yellow cluster status; the cluster can only distribute replica shards if nodes have the disk space to accommodate them.
+#####################################################################################
+
+1.
+尊敬的客户您好：
+
+理解您有发现索引的副本分片未被分配，我们有检查lfl-infra-opensearch集群索引的副本分片，发现有一个 replica shard 没有被 reroute 成功，目前有我们有借由 internal tool 有reroute 成功，目前您的集群为 green status。
+
+#####################################################################################
+
+尊敬的客户您好：
+
+經排查，我查看到集群副本分片未被分配的原因为：分片分配的当下分片无法获得内存锁定，并且超过最大重试次数[1]。
+---
+GET _cluster/allocation/explain
+{
+    "index": "cw-ebs-metrics-2023.05.16",
+    "shard": 0,
+    "primary": false,
+    "current_state": "unassigned",
+    "unassigned_info": {
+        "reason": "ALLOCATION_FAILED",
+        "at": "2023-12-23T00:34:04.129Z",
+        "failed_allocation_attempts": 5,
+        "details": "failed shard on node [3Ps2v-MjQkqjky2nyB10kg]: failed to create shard, failure IOException[failed to obtain in-memory shard lock]; nested: ShardLockObtainFailedException[[cw-ebs-metrics-2023.05.16][0]: obtaining shard lock for [starting shard] timed out after [5000ms], lock already held for [closing shard] with age [72397ms]]; ",
+        "last_allocation_status": "no_attempt"
+    },
+...
+}
+---
+
+透过再次重新分配分片(reroute)，可以看到集群已经恢复绿色状态：
+---
+GET _cluster/health
+{
+    "cluster_name": "707935184305:lfl-infra-opensearch",
+    "status": "green",
+    "timed_out": false,
+    "number_of_nodes": 7,
+    "number_of_data_nodes": 4,
+    "discovered_master": true,
+    "discovered_cluster_manager": true,
+    "active_primary_shards": 2307,
+    "active_shards": 4614,
+    "relocating_shards": 0,
+    "initializing_shards": 0,
+    "unassigned_shards": 0,
+    "delayed_unassigned_shards": 0,
+    "number_of_pending_tasks": 0,
+    "number_of_in_flight_fetch": 0,
+    "task_max_waiting_in_queue_millis": 0,
+    "active_shards_percent_as_number": 100
+}
+---
+
+由于 reroute API 仅能透过我们来执行，若未来再次发生同样的情况您可以
+1. 加大重试次数，并且透过停用并激活索引的副本分片来手动触发分片分配[2]。
+2. 透过案例与我们联系。
+
+########################################################################################
+
+2.
+客户您好，
+
+感谢您的耐心等待，我检查您的集群变黄原因是因为您在同一个时间有大量的索引从 Hot To Wram 迁移导致群忙碌无法响应 cluster health check，因此部分副本分片被尝试重新安排:
+
+[2023-12-08T00:39:32,041][INFO ][o.o.a.u.d.DestinationMigrationCoordinator] [2a4433ab44cd1ad8b4e79683f94e8e49] Detected cluster change event for destination migration
+[2023-12-08T00:39:32,084][WARN ][o.o.c.r.a.AllocationService] [2a4433ab44cd1ad8b4e79683f94e8e49] failing shard [failed shard, shard [cw-ec2-metrics-2023.05.16][0], node[3Ps2v-MjQkqjky2nyB10kg], [R], recovery_source[new shard recovery], s[INITIALIZING], a[id=XurXlAh0RM2rmPZ44COdQw], unassigned_info[[reason=ALLOCATION_FAILED], at[2023-12-08T00:39:26.547Z], failed_attempts[1], delayed=false, details[failed shard on node [3Ps2v-MjQkqjky2nyB10kg]: failed updating shard routing entry, failure IllegalArgumentException[illegal state: trying to move shard from primary mode to replica mode. Current [cw-ec2-metrics-2023.05.16][0], node[3Ps2v-MjQkqjky2nyB10kg], [P], s[STARTED], a[id=ZE9Ep1n1TC6LuXaAHZ1Lyw], new [cw-ec2-metrics-2023.05.16][0], node[3Ps2v-MjQkqjky2nyB10kg], [R], s[STARTED], a[id=ZE9Ep1n1TC6LuXaAHZ1Lyw]]], allocation_status[no_attempt]], expected_shard_size[6549311471], message [failed to create shard], failure [IOException[failed to obtain in-memory shard lock]; nested: ShardLockObtainFailedException[[cw-ec2-metrics-2023.05.16][0]: obtaining shard lock for [starting shard] timed out after [5000ms], lock already held for [closing shard] with age [5540ms]]; ], markAsStale [true]]
+java.io.IOException: failed to obtain in-memory shard lock
+
+您可以从您的 Cloudwatch 指标发现当群变黄时就是指标 HotToWarmMigrationSuccessLatency/HotToWarmMigrationProcessingLatency 及 HotToWarmMigrationForceMergeLatency 的 15min Maxmuim峰值。
+
+同时也可以看见迁移期间消费大量的磁盘 Throughput 用于读写：(WriteThroughput/ReadThroughput) 15min Maxmuim的峰值。
+
+这主要是当索引由  Hot To Wram 转换时需要先进行 force merge 这是一个很耗资源的操作 (CPU/Memory/IOPS/Throughput)，因此我们会建议调整优化 force merge 结果数量例如 [1]：
+
+PUT my-index/_settings
+{
+  "index": {
+    "ultrawarm": {
+      "migration": {
+        "force_merge": {
+          "max_num_segments": 1000
+        }
+      }
+    }
+  }
+}
+
+并且可行的话尽量使不同的索引在不同的时间进行 Hot to Warm 迁移以避免短时间导致集群遭遇瓶颈。
+
+[1] UltraWarm 亚马逊 OpenSearch 服务存储 - 迁移调整 - https://docs.aws.amazon.com/zh_cn/opensearch-service/latest/developerguide/ultrawarm.html#ultrawarm-settings 
+
