@@ -136,3 +136,337 @@ GET _plugins/_ism/explain/cloudtrail-2022.06.08
 以及您回传GET cloudtrail-2022.06.08的结果当中都可以看到"index_creation_date" : 1678912855171，将 unix 时间戳转换为日期和时间为 2023/03/16 04:40:55 UTC+8，因此您可看见"step_status" : "condition_not_met"。
 
 您的ISM policy将 hot 转到warm的条件是60天，因此这个index还未达到可以转移的日期。
+
+
+#############################################################################################
+
+尊敬的客户您好:
+
+这里有看到您提供的的  cw-all-metric-lifecycle  ISM policy[3]，与您的 hot_warm_cold_workflow  ISM policy[2]，感谢您有提供 ISM polices，
+有发现到您的 cw-all-metric-lifecycle policy 的 warm status 的 actions 为空值，可否透过您的 opensearch dashboard 加入以下warm_migration action[1] 在您的 cw-all-metric-lifecycle  ISM policy，修改之后，您需要重新 apply 一次此 policy 在对应的 indices:
+
+            {
+                "name": "warm",
+                "actions": [
+                    {
+                        "retry": {
+                            "count": 5,
+                            "backoff": "exponential",
+                            "delay": "1h"
+                        },
+                        "warm_migration": {}
+                    }
+                ],
+                "transitions": [
+                    …
+                ]
+            }
+
+希望以上有帮助您的疑问。 
+
+如果您有任何其他疑问和疑虑，我们很乐意为您提供帮助。
+
+祝您有美好的一天！
+
+
+参考资料:
+[1]Sample policies
+https://docs.aws.amazon.com/opensearch-service/latest/developerguide/ism.html#ism-example 
+
+[2] hot_warm_cold_workflow ISM policy 
+{
+    "id": "hot_warm_cold_workflow",
+    "seqNo": 2402760,
+    "primaryTerm": 1,
+    "policy": {
+        "policy_id": "hot_warm_cold_workflow",
+        "description": "A sample description of the policy",
+        "last_updated_time": 1675736009178,
+        "schema_version": 16,
+        "error_notification": null,
+        "default_state": "hot",
+        "states": [
+            {
+                "name": "hot",
+                "actions": [],
+                "transitions": [
+                    {
+                        "state_name": "warm",
+                        "conditions": {
+                            "min_index_age": "60d"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "warm",
+                "actions": [
+                    {
+                        "retry": {
+                            "count": 5,
+                            "backoff": "exponential",
+                            "delay": "1h"
+                        },
+                        "warm_migration": {}
+                    }
+                ],
+                "transitions": [
+                    {
+                        "state_name": "cold",
+                        "conditions": {
+                            "min_index_age": "90d"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "cold",
+                "actions": [
+                    {
+                        "retry": {
+                            "count": 3,
+                            "backoff": "exponential",
+                            "delay": "1m"
+                        },
+                        "cold_migration": {
+                            "start_time": null,
+                            "end_time": null,
+                            "timestamp_field": null,
+                            "ignore": "timestamp"
+                        }
+                    }
+                ],
+                "transitions": [
+                    {
+                        "state_name": "delete",
+                        "conditions": {
+                            "min_index_age": "365d"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "delete",
+                "actions": [
+                    {
+                        "retry": {
+                            "count": 3,
+                            "backoff": "exponential",
+                            "delay": "1m"
+                        },
+                        "delete": {}
+                    }
+                ],
+                "transitions": []
+            }
+        ],
+        "ism_template": [
+            {
+                "index_patterns": [
+                    "lfl-*"
+                ],
+                "priority": 1,
+                "last_updated_time": 1671174794902
+            }
+        ]
+    }
+}
+
+
+[3] cw-all-metric-lifecycle ISM policy 
+{
+    "id": "cw-all-metric-lifecycle",
+    "seqNo": 11182748,
+    "primaryTerm": 1,
+    "policy": {
+        "policy_id": "cw-all-metric-lifecycle",
+        "description": "for ec2, waf, elb, fsx metric logs",
+        "last_updated_time": 1681004896713,
+        "schema_version": 16,
+        "error_notification": null,
+        "default_state": "hot",
+        "states": [
+            {
+                "name": "hot",
+                "actions": [],
+                "transitions": [
+                    {
+                        "state_name": "warm",
+                        "conditions": {
+                            "min_index_age": "60d"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "warm",
+                "actions": [],
+                "transitions": [
+                    {
+                        "state_name": "cold",
+                        "conditions": {
+                            "min_index_age": "180d"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "cold",
+                "actions": [],
+                "transitions": [
+                    {
+                        "state_name": "delete",
+                        "conditions": {
+                            "min_index_age": "1095d"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "delete",
+                "actions": [
+                    {
+                        "retry": {
+                            "count": 3,
+                            "backoff": "exponential",
+                            "delay": "1m"
+                        },
+                        "delete": {}
+                    }
+                ],
+                "transitions": []
+            }
+        ],
+        "ism_template": [
+            {
+                "index_patterns": [
+                    "cw-*-metrics-*"
+                ],
+                "priority": 1,
+                "last_updated_time": 1678153905259
+            }
+        ]
+    }
+}
+
+####################################################################################
+
+按您的配置，Cold并没有迁移。
+{
+    "id": "cw-all-metric-lifecycle",
+    "seqNo": 11441275,
+    "primaryTerm": 1,
+    "policy": {
+        "policy_id": "cw-all-metric-lifecycle",
+        "description": "for ec2, waf, elb, fsx metric logs",
+        "last_updated_time": 1681108005226,
+        "schema_version": 16,
+        "error_notification": null,
+        "default_state": "hot",
+        "states": [
+            {
+                "name": "hot",
+                "actions": [],
+                "transitions": [
+                    {
+                        "state_name": "warm",
+                        "conditions": {
+                            "min_index_age": "60d"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "warm",
+                "actions": [
+                    {
+                        "retry": {
+                            "count": 5,
+                            "backoff": "exponential",
+                            "delay": "1h"
+                        },
+                        "warm_migration": {}
+                    }
+                ],
+                "transitions": [
+                    {
+                        "state_name": "cold",
+                        "conditions": {
+                            "min_index_age": "180d"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "cold",
+                "actions": [],
+                "transitions": [
+                    {
+                        "state_name": "delete",
+                        "conditions": {
+                            "min_index_age": "1095d"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "delete",
+                "actions": [
+                    {
+                        "retry": {
+                            "count": 3,
+                            "backoff": "exponential",
+                            "delay": "1m"
+                        },
+                        "delete": {}
+                    }
+                ],
+                "transitions": []
+            }
+        ],
+        "ism_template": [
+            {
+                "index_patterns": [
+                    "cw-*-metrics-*"
+                ],
+                "priority": 1,
+                "last_updated_time": 1678153905259
+            }
+        ]
+    }
+}
+
+############################################################
+
+尊敬的客户您好:
+
+感谢您的回覆，这里在后台监控，您已经成功将您的 index 成功从 hot node 迁移至 warm node 的状态，cold storage 也必须加上以下 action
+
+            {
+                "name": "cold",
+                "actions": [
+                    {
+                        "retry": {
+                            "count": 3,
+                            "backoff": "exponential",
+                            "delay": "1m"
+                        },
+                        "cold_migration": {
+                            "start_time": null,
+                            "end_time": null,
+                            "timestamp_field": null,
+                            "ignore": "timestamp"
+                        }
+                    }
+                ],
+                "transitions": [
+                    {
+                        "state_name": "delete",
+                        "conditions": {
+                            "min_index_age": "365d"
+                        }
+                    }
+                ]
+            }
+
+由于您有众多的 index 将迁入 warm node，有大量的 force merge action，force merge 会大量产生 segment 而占用您的使用空间，建议您确保您的 old Indics 已经迁入 warm node，再透过 query 的方式补齐您之前缺失的 ingest 资料，也建议您可以透过新案例询问.
