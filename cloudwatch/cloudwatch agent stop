@@ -1,0 +1,17 @@
+
+尊敬的客户您好，
+
+我理解您想要了解服务器LVWSTMSSGWBUT02 中CloudWatch Agent停止运行的原因。
+
+首先我通过内部工具看到在CWAgent命名空间内，有关该服务器的指标最后出现的时间点为 2024-02-03 19:45 UTC左右。我进一步查看了当时该服务器（i-0aee100f37b490352）的StatusCheckFailed、CPUUtilization等指标，均未看到异常，服务器本身在正常运行。
+
+要进一步查看Agent停止运行的原因，可否请您提供以下信息？
+- CloudWatch Agent配置文件【1】
+- CloudWatch Agent Log【2】
+路径：/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log 或 /var/log/amazon/amazon-cloudwatch-agent/amazon-cloudwatch-agent.log
+
+如果您有任何相关问题，欢迎随时提出。期待您的答复。
+
+参考链接：
+【1】https://docs.aws.amazon.com/zh_cn/AmazonCloudWatch/latest/monitoring/troubleshooting-CloudWatch-Agent.html#CloudWatch-Agent-files-and-locations 
+【2】https://docs.aws.amazon.com/zh_cn/AmazonCloudWatch/latest/monitoring/troubleshooting-CloudWatch-Agent.html#CloudWatch-Agent-troubleshooting-loginfo 
