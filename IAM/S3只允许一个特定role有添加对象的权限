@@ -1,0 +1,121 @@
+Question：
+有个存储桶只允许一个特定role有put object权限添加对象，账户内的user也无法在console或cli修改和删除桶里的对象。
+#######################################################################
+
+尊敬的客户您好：
+
+我理解您希望只允许特定 Role 能够 put object到S3桶， 同时拒绝其他User对S3桶进行操作，如果我的理解有误，还请您指正。
+
+对这种场景分为两种情况， 请看下面的说明：
+
+1. Role 和 桶是在同一个账号下。
+
+1.1. 首先需要给 Role 赋予 S3桶 put object 权限，可以在IAM Policy 或者 Bucket Policy 里面 设定，二者选其一就行。 Bucket Policy里面的设定可以参考 2.2。
+
+IAM Policy：
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::MyExampleBucket/*"
+    }
+  ]
+}
+
+
+1.2. 在Bucket Policy 里面 只允许 Role 来访问，拒绝其他用户。
+
+Bucket Policy：
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "s3:*",
+      "Resource": [
+        "arn:aws:s3:::MyExampleBucket",
+        "arn:aws:s3:::MyExampleBucket/*"
+      ],
+      "Condition": {
+        "StringNotLike": {
+          "aws:userId": [
+            "AROAEXAMPLEID:*",
+            "111111111111"
+          ]
+        }
+      }
+    }
+  ]
+}
+
+2. Role 和 桶是在不同账号下。
+
+2.1 首先需要给 Role 赋予 S3桶 put object 权限，需要同时在IAM Policy 和 Bucket Policy 里面 设定。 Bucket Policy 的设定和下面的1.2拒绝策略写在一起。
+
+IAM Policy同1.1。
+
+2.2 在Bucket Policy 里面 只允许 Role 来访问，拒绝其他用户。
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::111111111111:role/ROLENAME"
+            },
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws:s3:::MyExampleBucket"
+        },
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::111111111111:role/ROLENAME"
+            },
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject"
+            ],
+            "Resource": "arn:aws:s3:::MyExampleBucket/*"
+        },
+        {
+            "Effect": "Deny",
+            "Principal": "*",
+            "Action": "s3:*",
+            "Resource": [
+                "arn:aws:s3:::MyExampleBucket",
+                "arn:aws:s3:::MyExampleBucket/*"
+            ],
+            "Condition": {
+                "StringNotLike": {
+                    "aws:userId": [
+                        "AROAEXAMPLEID:*",
+                        "111111111111"
+                    ]
+                }
+            }
+        }
+    ]
+
+说明：
+
+1. 请您参考博客 【1】 【2】 了解详细步骤，可以根据您的需求对权限进行增加删减。
+
+2. 这种设定只允许 这个Role 访问S3桶， 如果要修改 Bucket Policy增加权限，而Role 只有PutObject 没有比如PutBucketPolicy，将没有用户能修改 Bucket Policy， 
+
+   只能使用Root用户删除Policy，重新来设定Policy， 详情请看文章【3】 的说明。
+
+希望以上说明对您有所帮助，若您有任何疑问，请随时联系我们， 我们很乐意为您提供技术支持。
+
+祝您工作顺利，生活愉快！
+
+参考资料：
+【1】 https://aws.amazon.com/blogs/security/how-to-restrict-amazon-s3-bucket-access-to-a-specific-iam-role/ 
+【2】 https://repost.aws/zh-Hans/knowledge-center/cross-account-access-s3 
+【3】 https://repost.aws/zh-Hans/knowledge-center/s3-accidentally-denied-access 
