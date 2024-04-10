@@ -82,3 +82,57 @@ GET _cat/indices/_warm
 
 参考资料：
 [1] 亚马逊Serv OpenSearch ice 中的索引状态管理 - https://docs.aws.amazon.com/zh_cn/opensearch-service/latest/developerguide/ism.html 
+
+################################################################################################
+
+客户您好，
+
+感谢您共享的讯息。
+
+1. 根据您的测试结果，您的集群运行ISM policy的功能是正常的。
+感谢您的耐心测试。
+
+2. 根据您回传
+GET _plugins/_ism/explain/cloudtrail-2022.06.08
+{
+  "cloudtrail-2022.06.08" : {
+    "index.plugins.index_state_management.policy_id" : "hot_warm_cold_workflow",
+    "index.opendistro.index_state_management.policy_id" : "hot_warm_cold_workflow",
+    "index" : "cloudtrail-2022.06.08",
+    "index_uuid" : "q7QE1RQOT-6zod6EWBlZPw",
+    "policy_id" : "hot_warm_cold_workflow",
+    "policy_seq_no" : 2402760,
+    "policy_primary_term" : 1,
+    "index_creation_date" : 1678912855171,
+    "state" : {
+      "name" : "hot",
+      "start_time" : 1681448509709
+    },
+    "action" : {
+      "name" : "transition",
+      "start_time" : 1681448702726,
+      "index" : -1,
+      "failed" : false,
+      "consumed_retries" : 0,
+      "last_retry_time" : 0
+    },
+    "step" : {
+      "name" : "attempt_transition_step",
+      "start_time" : 1681448702726,
+      "step_status" : "condition_not_met"
+    },
+    "retry_info" : {
+      "failed" : false,
+      "consumed_retries" : 0
+    },
+    "info" : {
+      "message" : "Evaluating transition conditions [index=cloudtrail-2022.06.08]"
+    },
+    "enabled" : true
+  },
+  "total_managed_indices" : 1
+}
+
+以及您回传GET cloudtrail-2022.06.08的结果当中都可以看到"index_creation_date" : 1678912855171，将 unix 时间戳转换为日期和时间为 2023/03/16 04:40:55 UTC+8，因此您可看见"step_status" : "condition_not_met"。
+
+您的ISM policy将 hot 转到warm的条件是60天，因此这个index还未达到可以转移的日期。
