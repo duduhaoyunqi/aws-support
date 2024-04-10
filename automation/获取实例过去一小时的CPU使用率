@@ -1,0 +1,148 @@
+
+您好，
+
+关于您提到的问题我有做个小测试，在我的环境中是可以正常运行的，我修改的部分是将 EC2 instance ID 进行更改，以下为 code 与结果。
+
+- Source code:
+
+import boto3
+from datetime import datetime
+from datetime import timedelta
+
+cw = boto3.client('cloudwatch')
+
+def lambda_handler(event, context):
+    metrics_response = cw.get_metric_data(
+        MetricDataQueries=[
+            {
+                'Id': 'string',
+                'MetricStat': {
+                    'Metric': {
+                        'Namespace': 'AWS/EC2',
+                        'MetricName': 'CPUUtilization',
+                        'Dimensions': [
+                            {
+                                'Name': 'InstanceId',
+                                'Value': 'i-xxxxxxx'
+                            },
+                        ]
+                    },
+                    'Period': 300,
+                    'Stat': 'Average',
+                },
+                'ReturnData': True
+            }
+        ],
+        StartTime=datetime.now()+timedelta(minutes=-60),
+        EndTime=datetime.now()
+        )
+     
+    print(metrics_response)
+
+
+- Result: 
+
+{
+   "MetricDataResults":[
+      {
+         "Id":"string",
+         "Label":"CPUUtilization",
+         "Timestamps":[
+            datetime.datetime(2024,
+            3,
+            11,
+            13,
+            15,
+            "tzinfo=tzlocal())",
+            datetime.datetime(2024,
+            3,
+            11,
+            13,
+            10,
+            "tzinfo=tzlocal())",
+            datetime.datetime(2024,
+            3,
+            11,
+            13,
+            5,
+            "tzinfo=tzlocal())",
+            datetime.datetime(2024,
+            3,
+            11,
+            13,
+            0,
+            "tzinfo=tzlocal())",
+            datetime.datetime(2024,
+            3,
+            11,
+            12,
+            55,
+            "tzinfo=tzlocal())",
+            datetime.datetime(2024,
+            3,
+            11,
+            12,
+            50,
+            "tzinfo=tzlocal())",
+            datetime.datetime(2024,
+            3,
+            11,
+            12,
+            45,
+            "tzinfo=tzlocal())",
+            datetime.datetime(2024,
+            3,
+            11,
+            12,
+            40,
+            "tzinfo=tzlocal())",
+            datetime.datetime(2024,
+            3,
+            11,
+            12,
+            35,
+            "tzinfo=tzlocal())",
+            datetime.datetime(2024,
+            3,
+            11,
+            12,
+            30,
+            "tzinfo=tzlocal())",
+            datetime.datetime(2024,
+            3,
+            11,
+            12,
+            25,
+            "tzinfo=tzlocal())"
+         ],
+         "Values":[
+            0.5667222376586238,
+            0.5950578812496795,
+            0.6032540246472469,
+            0.5989626748170647,
+            0.5999999999999847,
+            0.6000740946559088,
+            0.8570643011728022,
+            0.6362137630822919,
+            0.567661700614542,
+            0.6292547274750012,
+            0.6069502064749625
+         ],
+         "StatusCode":"Complete"
+      }
+   ],
+   "Messages":[
+      
+   ],
+   "ResponseMetadata":{
+      "RequestId":"6c46249a-50ed-4e5e-9300-ac564122b2a3",
+      "HTTPStatusCode":200,
+      "HTTPHeaders":{
+         "x-amzn-requestid":"6c46249a-50ed-4e5e-9300-ac564122b2a3",
+         "content-type":"text/xml",
+         "content-length":"1572",
+         "date":"Mon, 11 Mar 2024 13:25:21 GMT"
+      },
+      "RetryAttempts":0
+   }
+}
