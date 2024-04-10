@@ -1,0 +1,84 @@
+客户您好，
+
+想请您进行以下测试：
+
+1)请您执行GET _plugins/_ism/explain/<your_index_name>
+需要执行此API了解您的index是否有符合ISM policy。
+
+2)请您依照以下步骤进行一个简单的hot转移到warm的测试：
+
+1.创建一个测试用的hot-warm policy，min_index_age设置3分钟进行相较快速的测试。此外请您留意避免测试用的index_patterns以及priority与您其他ISM policy有所冲突。
+PUT _plugins/_ism/policies/hot_warm_test_policy
+{
+  "policy": {
+    "description": "Demonstrate a hot-warm workflow",
+    "default_state": "hot",
+    "schema_version": 1,
+    "states": [
+      {
+        "name": "hot",
+        "actions": [],
+        "transitions": [
+          {
+            "state_name": "warm",
+            "conditions": {
+              "min_index_age": "3m"
+            }
+          }
+        ]
+      },
+      {
+        "name": "warm",
+        "actions": [{
+          "warm_migration": {},
+          "retry": {
+            "count": 5,
+            "delay": "1h"
+          }
+        }]
+      }
+    ],
+    "ism_template": {
+      "index_patterns": ["lfl-sample-index-2023"],
+      "priority": 10
+    }
+  }
+}
+
+2.建立测试用的index
+PUT /lfl-sample-index-2023
+{
+  "settings": {
+    "index": {
+      "number_of_shards": 2,
+      "number_of_replicas": 1
+    }
+  },
+  "mappings": {
+    "properties": {
+      "age": {
+        "type": "integer"
+      }
+    }
+  }
+}
+
+3. Put some records
+PUT lfl-sample-index-2023/_doc/1
+{
+    "user" : "testuser",
+    "timestamp" : "2023-04-16T14:12:12",
+    "message" : "ISM testing"
+}
+
+4. 检查 ISM policy 状态
+GET _plugins/_ism/explain/lfl-sample-index-2023
+
+5. 检查 index
+GET _cat/indices/_warm
+
+将策略附加到索引后，ISM 会创建一个每 5 到 8 分钟（外加 0-60％ 的随机抖动）运行一次的作业[1]
+因此创建此测试用的policy从初始化到策略成功hot-warm转移可能需要花上一点等待时间，恳请您耐心等候测试结果。
+
+参考资料：
+[1] 亚马逊Serv OpenSearch ice 中的索引状态管理 - https://docs.aws.amazon.com/zh_cn/opensearch-service/latest/developerguide/ism.html 
