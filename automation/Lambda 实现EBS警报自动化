@@ -1,0 +1,154 @@
+
+
+尊敬的客户您好
+ 
+我从您的案例回复中了解到，您想通过 Lambda 实现EBS警报自动化的目的。如果我理解错了，请随时纠正我。
+
+这里请允许我为您分享实现这个目的的具体配置：
+
+Evnet Bridge pattern:
+{
+  "source": ["aws.ec2"],
+  "detail-type": ["EBS Volume Notification"],
+  "detail": {
+    "event": ["createVolume"]
+  }
+}
+
+根据您提供的示例 alarm，我写了如下Lambda实现这一目的:
+```
+import boto3
+
+def lambda_handler(event, context):
+    print(event)
+    
+    # Check if the event is triggered by EventBridge
+    if 'source' in event and event['source'] == 'aws.ec2':
+        # Extract necessary information from the event
+        event_detail = event.get('detail', {})
+        print(event_detail)
+        event_resource_arn = event['resources'][0]  # Get the first resource ARN
+        print(event_resource_arn)
+        
+        if event_resource_arn:
+            # Extract volume ID from the resource ARN
+            volume_id = event_resource_arn.split('/')[-1]
+            print(volume_id
+            )
+            sns_topic_arn = "arn:aws:sns:ap-southeast-1:259223684281:CloudWatch_Alarms_Topic"
+            
+            # Create CloudWatch client
+            cloudwatch_client = boto3.client('cloudwatch')
+            
+            alarm_name = f"(S4)EBS:VolumeThroughput:*:{volume_id}"
+            
+            # Define alarm properties
+            alarm_properties = {
+                "AlarmName": alarm_name,
+                "ActionsEnabled": True,
+                "OKActions": [sns_topic_arn],
+                "AlarmActions": [sns_topic_arn],
+                "InsufficientDataActions": [],
+                "EvaluationPeriods": 10,
+                "DatapointsToAlarm": 10,
+                "Threshold": 100000000,
+                "ComparisonOperator": "GreaterThanThreshold",
+                "TreatMissingData": "notBreaching",
+                "Metrics": [
+                    {
+                        "Id": "m3",
+                        "ReturnData": False,
+                        "MetricStat": {
+                            "Metric": {
+                                "Namespace": "AWS/EBS",
+                                "MetricName": "VolumeIdleTime",
+                                "Dimensions": [{"Name": "VolumeId", "Value": volume_id}]
+                            },
+                            "Period": 120,
+                            "Stat": "Sum"
+                        }
+                    },
+                    {
+                        "Id": "m2",
+                        "ReturnData": False,
+                        "MetricStat": {
+                            "Metric": {
+                                "Namespace": "AWS/EBS",
+                                "MetricName": "VolumeWriteBytes",
+                                "Dimensions": [{"Name": "VolumeId", "Value": volume_id}]
+                            },
+                            "Period": 120,
+                            "Stat": "Sum"
+                        }
+                    },
+                    {
+                        "Id": "m1",
+                        "ReturnData": False,
+                        "MetricStat": {
+                            "Metric": {
+                                "Namespace": "AWS/EBS",
+                                "MetricName": "VolumeReadBytes",
+                                "Dimensions": [{"Name": "VolumeId", "Value": volume_id}]
+                            },
+                            "Period": 120,
+                            "Stat": "Sum"
+                        }
+                    },
+                    {
+                        "Id": "e1",
+                        "Label": "VolumeThroughput",
+                        "ReturnData": True,
+                        "Expression": "IF(m3>(PERIOD(m3)*4/5), 0, (m1+m2)/(PERIOD(m3)-m3))"
+                    }
+                ]
+            }
+            
+            # Create the alarm
+            response = cloudwatch_client.put_metric_alarm(
+                **alarm_properties
+            )
+            
+            print(response)
+        else:
+            print("No EBS volume found in the event.")
+    else:
+        print("This Lambda function is not triggered by EventBridge.")
+
+    return {
+        'statusCode': 200,
+        'body': 'Alarm creation process completed.'
+    }
+```
+通过上述Eventbridge 以及 Lambda的配合，能最终达成为新建ebs创建警报的目的。
+
+但以下三点请您注意：
+1. 这里我们只能使用 createVolume 的 eventbridge，并不能够使用 attachVolume。因为 EBS 只有在执行 attachVolume 操作失败时才会发送事件 "detail-type": "EBS Volume Notification"。
+英文原文如下：“The attachVolume or reattachVolume event is sent to your AWS account if a volume fails to attach or reattach to an instance.”
+请参考以下文档链接，了解在卷创建时发送的样本事件数据 "EBS Volume Notification"：
+https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-cloud-watch-events.html#create-volume 
+
+2. 每个EBS 会触发一次event bridge，因此您的Lambda 的调用次数和您创建的EBS数量一致。
+
+3. 关于代码支持：
+作为AWS支持工程师，我对AWS服务有专业知识，对编码/开发的知识有限。请注意，AWS支持不包括代码开发。
+
+我已尽力为您提供案例支持。请仅将以上代码用作参考。如果您想将它用到生产环境，请务必进行严格测试。
+
+####################################################################################
+
+创建完实例后在cloudtrail为什么看不到createVolume？
+
+####################################################################################
+
+尊敬的客户您好，
+
+我明白您无法从CloudTrail 中找到 EC2 创建 EBS 的记录。
+
+这里我想和您说的是 AWS CloudTrail 事件日志 CreateVolume 不适用于在 Amazon EC2 启动期间创建的 EBS 卷。
+
+只有手动创建的 EBS 卷可以使用卷 ID 查看 CloudTrail 事件日志中的 CreateVolume。
+
+但是在 EC2 启动期间创建的 EBS 卷可以使用 EC2 实例 ID 查看 CloudTrail 事件日志中的 RunInstances。
+
+这里请您参考以下文档：
+https://repost.aws/zh-Hans/knowledge-center/find-ebs-user-config-cloudtrail 
