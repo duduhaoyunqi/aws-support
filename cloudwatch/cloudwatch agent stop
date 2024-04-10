@@ -15,3 +15,18 @@
 参考链接：
 【1】https://docs.aws.amazon.com/zh_cn/AmazonCloudWatch/latest/monitoring/troubleshooting-CloudWatch-Agent.html#CloudWatch-Agent-files-and-locations 
 【2】https://docs.aws.amazon.com/zh_cn/AmazonCloudWatch/latest/monitoring/troubleshooting-CloudWatch-Agent.html#CloudWatch-Agent-troubleshooting-loginfo 
+
+###############################################################################################################
+
+另外，您还想了解如何大量部署CloudWatch Agent的配置，官方文档有提供3个可行的做法：
+1. [建议做法]配置System Manager Distributor + System Manager State Manager
+2. 于启动EC2实例时使用user data
+3. 将已经配置好的EC2制作成AMI，未来通过该AMI启动实例
+
+详细说明与操作方式可以参考文档[1]。
+
+===========
+参考文档 
+===========
+[1] 在Amazon EC2实例和地端主机安装CloudWatch agent
+https://docs.aws.amazon.com/prescriptive-guidance/latest/implementing-logging-monitoring-cloudwatch/cloudwatch-installation-ec2-on-premises.html 
