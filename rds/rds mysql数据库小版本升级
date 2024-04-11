@@ -121,7 +121,7 @@ Question:
 
 尊敬的客户您好：
 
-根据您提供的 dig 资讯，可以看出目前已经导向正确的 ip 位置（green instance)。
+根据您提供的 dig 结果，可以看出目前已经导向正确的 ip 位置（green instance)。
 
 关于 EC2 TTL 的设置，您可以参考 [1] 来进行察看或设置。
 
@@ -131,3 +131,5 @@ Question:
 
 [1] https://repost.aws/knowledge-center/dns-resolution-failures-ec2-linux 
 [2] https://repost.aws/knowledge-center/aurora-mysql-db-cluser-read-only-error 
+
+
