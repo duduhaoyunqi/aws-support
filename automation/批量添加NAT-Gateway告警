@@ -69,3 +69,4 @@ for nat_gateway_id in ${nat_gateway_ids} ; do
 	--comparison-operator "GreaterThanThreshold" \
 	--treat-missing-data "notBreaching"
 done
+
