@@ -1,0 +1,48 @@
+UAT-NAT GateWay-PacketsDropCount-S2
+
+Alarm Source：
+aws cloudwatch put-metric-alarm \
+--alarm-name '(S2)NATGATEWAY:PacketsDropCount:*:nat-09f5a95155173eb7c' \
+--actions-enabled \
+--ok-actions 'arn:aws:sns:ap-southeast-1:351732658226:CloudWatch_Alarms_Topic' \
+--alarm-actions 'arn:aws:sns:ap-southeast-1:351732658226:CloudWatch_Alarms_Topic' \
+--metric-name 'PacketsDropCount' \
+--namespace 'AWS/NATGateway' \
+--statistic 'Sum' \
+--dimensions '[{"Name":"NatGatewayId","Value":"nat-09f5a95155173eb7c"}]' \
+--period 60 \
+--evaluation-periods 10 \
+--datapoints-to-alarm 10 \
+--threshold 5 \
+--comparison-operator 'GreaterThanThreshold' \
+--treat-missing-data 'notBreaching'
+
+AWS CLI：
+aws_region=ap-southeast-1
+
+nat_gateway_ids=$(
+aws ec2 describe-nat-gateways \
+    --query "NatGateways[*].[NatGatewayId]" \
+    --output text \
+    --region $aws_region
+)
+
+for nat_gateway_id in ${nat_gateway_ids} ; do
+    new_nat_gateway_id=$(echo $nat_gateway_id | sed 's/\\r//g')
+    aws cloudwatch put-metric-alarm \
+  --alarm-name "(S2)NATGATEWAY:PacketsDropCount:*:${new_nat_gateway_id}" \
+  --actions-enabled \
+  --ok-actions "arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic" \
+  --alarm-actions "arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic" \
+  --metric-name "PacketsDropCount" \
+  --namespace "AWS/NATGateway" \
+  --statistic "Sum" \
+  --dimensions "Name=NatGatewayId,Value=${new_nat_gateway_id}" \
+  --period 60 \
+  --evaluation-periods 10 \
+  --datapoints-to-alarm 10 \
+  --threshold 5 \
+  --comparison-operator "GreaterThanThreshold" \
+  --treat-missing-data "notBreaching"
+done
+
