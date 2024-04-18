@@ -1,6 +1,7 @@
 UAT-NAT GateWay-PacketsDropCount-S2
 
-Alarm Source：
+
+#Alarm Source中获取的是单引号
 aws cloudwatch put-metric-alarm \
 --alarm-name '(S2)NATGATEWAY:PacketsDropCount:*:nat-09f5a95155173eb7c' \
 --actions-enabled \
@@ -27,7 +28,7 @@ aws ec2 describe-nat-gateways \
     --region $aws_region
 )
 
-#必须是双引号
+#必须改成双引号
 for nat_gateway_id in ${nat_gateway_ids} ; do
     new_nat_gateway_id=$(echo $nat_gateway_id | sed 's/\\r//g')
     aws cloudwatch put-metric-alarm \
