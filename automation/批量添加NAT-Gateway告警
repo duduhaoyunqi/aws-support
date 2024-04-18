@@ -1,6 +1,5 @@
 UAT-NAT GateWay-PacketsDropCount-S2
 
-
 #Alarm Source中获取的是单引号
 aws cloudwatch put-metric-alarm \
 --alarm-name '(S2)NATGATEWAY:PacketsDropCount:*:nat-09f5a95155173eb7c' \
