@@ -27,6 +27,7 @@ aws ec2 describe-nat-gateways \
     --region $aws_region
 )
 
+#必须是双引号
 for nat_gateway_id in ${nat_gateway_ids} ; do
     new_nat_gateway_id=$(echo $nat_gateway_id | sed 's/\\r//g')
     aws cloudwatch put-metric-alarm \
