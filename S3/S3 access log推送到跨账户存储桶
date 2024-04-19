@@ -1,0 +1,22 @@
+架构如图：log_architecture.png
+
+尊敬的客户您好:
+
+我理解您想要配置一个跨帐户的 S3 server access log (服务器访问日志)，但是您遇到了问题。
+
+==========
+针对 Server access logs，在指定一个目标存储桶时，您一定要选一个在同一个区域和帐户的桶 [1]。因此，您没有办法直接跨帐户来配置一个目标桶，会需要在同一个帐户上先指定一个桶，然后通过其他法来把这些日志迁移到其他的桶。
+
+对于迁移日志的部分，我们主要会建议您可以参考使用 S3 replication (复制) 来自動的把 S3 桶的资料复制到跨帐户的桶内。在我们的 S3 复制文档上，我们其中一个建议使用 S3 复制是在日志聚合到单个存储桶时可以使用 [2]。对于跨帐户的配置，您可以参考以下的文档：
+
+当源存储桶和目标存储桶由不同账户拥有时配置复制 - https://docs.aws.amazon.com/zh_cn/AmazonS3/latest/userguide/replication-walkthrough-2.html 
+
+若您不希望通过 replication 的方法来集合，您可以参考使用分批复制来定期的迁移您桶内的日志到其他的桶。对于这个的详细，您可以参考以下的文档：
+
+使用 S3 分批复制以复制现有对象 - https://docs.aws.amazon.com/zh_cn/AmazonS3/latest/userguide/s3-batch-replication-batch.html 
+==========
+
+==========
+我也理解您想要知道如何配置跨帐户的 EIP Flow Log 日志。通过我的查询，以下有桶策略的范例，您可以参考。请注意，其中的参数会需要按照您的架构名称改变：
+
+将流日志发布到 Amazon S3 - 针对流日志的 Amazon S3 存储桶权限 - 
