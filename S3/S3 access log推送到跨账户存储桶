@@ -1,4 +1,4 @@
-架构如图：log_architecture.png, 将S3 access log推送到log_archive账户下的存储桶统一管理，用于通过logstash统一从log_archive账户下的存储桶中拉取数据。
+架构如图：log_architecture.png, 将S3 access log推送到log_archive账户下的存储桶统一管理，用于通过logstash统一从log_archive账户下的存储桶中拉取数据进而推送到opensearch。
 
 尊敬的客户您好:
 
