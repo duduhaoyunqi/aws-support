@@ -1,0 +1,66 @@
+Question:
+如何实现通过从实例上的logstash从alb日志或WAF日志的S3存储桶中采集数据推送到opensearch。
+
+尊敬的客户您好，
+
+感谢您联系亚马逊云端支援，我是负责您案例的工程师 Andy，很高兴能为您服务!
+
+从您的案例描述来说，我理解您想知道如何透过 Logstash 来将 S3 的数据写入至 OpenSearch，若我理解有误的地方，再请协助我们进行修正，谢谢。
+
+首先，在 OpenSearch 使用 Logstash 为 Elastic 第三方工具，因 xpack 相容性缘由在 OpenSearch 使用时需另外安装 logstash-output-opensearch 的插件。由于 Logstash 为第三方工具之安装档，故仅能协助 Best Effort 进行测试。
+
+详细请参考以下测试步骤：
+
+步骤1. 安装 Elastic 提供之 Logstash 安装档并进行解压缩 [1][2]
+$ wget https://artifacts.elastic.co/downloads/logstash/logstash-8.13.2-linux-x86_64.tar.gz 
+$ tar -zxvf logstash-8.13.2-linux-x86_64.tar.gz
+
+步骤2. 进入到 Logsatsh 的文件内
+$ cd logstash-8.13.2
+
+步骤3. 安装 logstash-output-opensearch (下载完成可见下方 successful 输出)
+$ bin/logstash-plugin install logstash-output-opensearch
+
+Using bundled JDK: /home/ec2-user/logstash-8.13.2/jdk
+Validating logstash-output-opensearch
+Resolving mixin dependencies
+Updating mixin dependencies logstash-mixin-ecs_compatibility_support
+Bundler attempted to update logstash-mixin-ecs_compatibility_support but its version stayed the same
+Installing logstash-output-opensearch
+Installation successful
+
+步骤4. 创建 logstash.conf 配置档 [3][4]
+$ vim config/logstash.conf
+
+input {
+  s3 {
+    bucket => "<your-s3-bucket>"
+    region => "<your-s3-region>"
+  }
+}
+output {
+  opensearch {
+    hosts       => "https://search-xxx.us-east-1.es.amazonaws.com:443 " <-- change to your aos domain endpoint.
+    user        => "<your-username>"
+    password    => "<your-passowrd>"
+    index       => "logstash-logs-%{+YYYY.MM.dd}"
+    ecs_compatibility => disabled
+    ssl_certificate_verification => false
+  }
+}
+
+步骤5. 使用 logstash.conf 来启动 Logstash [4]
+$bin/logstash -f /home/ec2-user/logstash-8.13.2/config/logstash.conf
+
+步骤6. 登入 OpenSearch Dashboard/Kibana 至 Dev Tools 执行以下指令查看是否成功写入。
+
+GET _cat/indices
+yellow open logstash-logs-2024.04.20                    3-zupy7rRv6I7gzvaPmLew 1 1      304 0  53.4kb  53.4kb
+
+GET logstash-logs-2024.04.20/_search
+{
+  "took": 4,
+  "timed_out": false,
+
+若有其他相关疑问，欢迎随时透过此案例联系我们，我将非常乐意给予协助与支持。
+
