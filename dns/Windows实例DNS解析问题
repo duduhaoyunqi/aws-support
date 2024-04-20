@@ -6,6 +6,7 @@ issue:
 感谢您联系AWS技术支持团队，我是工程师Mingkai,很荣幸能协助您解决相关问题。
 
 今天会议中与您沟通了如下问题:
+VPC默认的DNS是所在VPC的CIDR+2 （vpc-sg-coreapp-prdvpc-077c009402a41c5da	Available	10.133.32.0/20这个vpc的默认dns是10.133.32.2）
 --您在 i-00c1757651ed82df9 CloudWatch agent 的日志中看到“2024-03-27T05:41:34Z E! cloudwatch: code: RequestError, message: send request failed, original error: Post "https://monitoring.ap-southeast-1.amazonaws.com/ ": dial tcp: lookup monitoring.ap-southeast-1.amazonaws.com: no such host” 这样的报错信息。显示DNS解析异常
 --检查Cloudwatch agent 配置文件，可以看到在log选项下，您有配置 endpoint_override 字段，选择将日志发送到VPC 终端节点 (vpce-0ffd85094d9ab1187-uws94785.logs.ap-southeast-1.vpce.amazonaws.com) credentials 使用的是以7*******4305结尾的账号。
 --同时我们检查了位于同一个VPC 和子网下的EC2 i-0870dc3053e3958e1 的配置，使用同样的权限将日志发送到同样的VPC终端节点，其可以正常工作。
