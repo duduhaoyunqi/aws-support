@@ -61,7 +61,7 @@ tnc 8.8.8.8 -port 53
       monitoring.ap-southeast-1.amazonaws.com --> public IP 地址
       vpce-0ffd85094d9ab1187-uws94785-ap-southeast-1b.logs.ap-southeast-1.vpce.amazonaws.com  -->  10.133.13.249
 
-    VPC默认的DNS (10.133.32.2) 返回
+    VPC默认的DNS (10.133.32.2) 返回 （vpc-sg-coreapp-prd vpc-077c009402a41c5da	Available	10.133.32.0/20）
       monitoring.ap-southeast-1.amazonaws.com --> private IP 地址
       vpce-0ffd85094d9ab1187-uws94785-ap-southeast-1b.logs.ap-southeast-1.vpce.amazonaws.com  -->  10.133.13.249
 
