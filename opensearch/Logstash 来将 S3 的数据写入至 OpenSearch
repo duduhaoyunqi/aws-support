@@ -66,3 +66,281 @@ GET logstash-logs-2024.04.20/_search
 
 若有其他相关疑问，欢迎随时透过此案例联系我们，我将非常乐意给予协助与支持。
 
+#################################################################################
+
+Alpha logstash.conf配置文件参考
+
+#cloudtrail.conf
+input {
+  s3 {
+    bucket => "aws-controltower-baselinecloudtrail-pwc"
+    region => "ap-southeast-1"
+    delete => false
+    interval => 60
+    prefix => "AWSLogs/o-zij9p7n58c/"
+    type => "cloudtrail"
+    codec => "cloudtrail"
+    endpoint => "https://bucket.vpce-0a42b89b7cfaf2611-vx6ch5wd.s3.ap-southeast-1.vpce.amazonaws.com"
+    sincedb_path => "/var/lib/logstash/plugins/inputs/s3/sincedb_cloudtrail"
+  }
+}
+filter {
+  if [type] == "cloudtrail" {
+    mutate {
+      remove_field => ["requestParameters", "apiVersion"]
+    }
+  }
+}
+
+output {
+  if [type] == "cloudtrail" {
+    opensearch {
+      hosts       => "https://vpc-lfl-infra-opensearch-nwgtm7wlg7mimhomebq646hnoi.ap-southeast-1.es.amazonaws.com:443"
+      user        => "infadmin"
+      password    => "${OS_PWD}"
+      index       => "lfl-cloudtrail-%{+YYYY.MM.dd}"
+      ecs_compatibility => disabled
+      ssl_certificate_verification => false
+    }
+  }
+}
+
+#eif.conf
+input {
+  s3 {
+    bucket => "lfl-eip-log-as1"
+    region => "ap-southeast-1"
+    type => "eip"
+  }
+}
+
+filter {
+  if [type] == "eip" {
+    json {
+      source => "message"
+      skip_on_invalid_json => true
+    }
+    grok {
+      match => { "message" => "%{NUMBER:version} %{NUMBER:account-id} %{DATA:interface-id} %{IP:clientIp} %{IP:serverIp} %{NUMBER:clientPort} %{NUMBER:server
+Port} %{NUMBER:protocol} %{NUMBER:packets:int} %{NUMBER:bytes:int} %{NUMBER:start_time:int} %{NUMBER:end_time:int} %{WORD:action} %{WORD:log-status}" }
+    }
+  }
+}
+
+output {
+  if [type] == "eip" {
+    opensearch {
+      hosts       => "https://vpc-lfl-infra-opensearch-nwgtm7wlg7mimhomebq646hnoi.ap-southeast-1.es.amazonaws.com:443"
+      user        => "infadmin"
+      password    => "${OS_PWD}"
+      index       => "lfl-eip-log-as1-%{+YYYY.MM.dd}"
+      ecs_compatibility => disabled
+      ssl_certificate_verification => false
+    }
+  }
+}
+
+
+#elb.conf
+input {
+  s3 {
+    bucket => "lfl-elb-log-as1"
+    region => "ap-southeast-1"
+    type => "elb"
+  }
+}
+filter {
+  if [type] == "elb" {
+    if [message] =~ /^tls/ {
+      grok {
+        match => { "message" => "%{WORD:lb_type} %{NUMBER:version} %{TIMESTAMP_ISO8601:time} %{GREEDYDATA:elb} %{GREEDYDATA:listener} %{GREEDYDATA:client} %{
+GREEDYDATA:server} %{NUMBER:connection_time:int} %{NUMBER:tls_handshake_time:int} %{NUMBER:received_bytes:int} %{NUMBER:sent_bytes:int} %{GREEDYDATA:incoming
+_tls_alert} %{GREEDYDATA:chosen_cert_arn} %{GREEDYDATA:chosen_cert_serial} %{USERNAME:tls_cipher} %{DATA:tls_protocol_version} %{GREEDYDATA:tls_named_group}
+%{USERNAME:domain_name} %{GREEDYDATA:alpn_fe_protocol} %{GREEDYDATA:alpn_be_protocol} %{GREEDYDATA:alpn_client_preference_list}" }
+      }
+      mutate {
+        split => {
+          "client" => ":"
+          "server" => ":"
+        }
+        add_field => {
+          "clientIp" => "%{[client][0]}"
+          "clientPort" => "%{[client][1]}"
+          "serverIp" => "%{[server][0]}"
+          "serverPort" => "%{[server][1]}"
+        }
+        remove_field => [ "client", "server" ]
+      }
+    } else {
+      grok {
+        match => { "message" => '%{WORD:lb_type} %{TIMESTAMP_ISO8601:time} %{GREEDYDATA:httpSourceId} %{GREEDYDATA:client} %{GREEDYDATA:server} %{NUMBER:requ
+est_processing_time:int} %{NUMBER:target_processing_time:int} %{NUMBER:response_processing_time:int} %{NUMBER:elb_status_code} %{GREEDYDATA:target_status_cod
+e} %{NUMBER:received_bytes:int} %{NUMBER:sent_bytes:int} "%{DATA:httpMethod} %{GREEDYDATA:url} %{DATA:httpVersion}" "%{DATA:user_agent}" %{DATA:ssl_cipher} %
+{DATA:ssl_protocol} %{GREEDYDATA:server_group_arn} "%{DATA:requestId}" "%{DATA:domain_name}" "%{GREEDYDATA:chosen_cert_arn}" %{GREEDYDATA:matched_rule_priori
+ty} %{TIMESTAMP_ISO8601:request_creation_time} "%{GREEDYDATA:actions_executed}" "%{DATA:redirect_url}" "%{DATA:error_reason}" "%{GREEDYDATA:target_server}" "
+%{GREEDYDATA:server_status_code_list}" "%{GREEDYDATA:classification}" "%{GREEDYDATA:classification_reason}"' }
+      }
+      mutate {
+        split => {
+          "client" => ":"
+          "server" => ":"
+        }
+        add_field => {
+          "clientIp" => "%{[client][0]}"
+          "clientPort" => "%{[client][1]}"
+          "serverIp" => "%{[server][0]}"
+          "serverPort" => "%{[server][1]}"
+        }
+        remove_field => [ "client", "server" ]
+      }
+    }
+  }
+}
+
+output {
+  if [type] == "elb" {
+    opensearch {
+      hosts       => "https://vpc-lfl-infra-opensearch-nwgtm7wlg7mimhomebq646hnoi.ap-southeast-1.es.amazonaws.com:443"
+      user        => "infadmin"
+      password    => "${OS_PWD}"
+      index       => "lfl-elb-log-as1-%{+YYYY.MM.dd}"
+      ecs_compatibility => disabled
+      ssl_certificate_verification => false
+    }
+  }
+}
+
+
+#waf_nprd.conf
+input {
+  s3 {
+    bucket => "aws-waf-logs-lfl-nprd"
+    region => "ap-southeast-1"
+    endpoint => "https://bucket.vpce-0347d2eefc835d68d-ai16mqo8.s3.ap-southeast-1.vpce.amazonaws.com"
+    type => "waf-nprd"
+  }
+}
+filter {
+  if [type] == "waf-nprd" {
+    json {
+      source => "message"
+      skip_on_invalid_json => true
+    }
+  }
+}
+
+output {
+  if [type] == "waf-nprd" {
+    opensearch {
+      hosts       => "https://vpc-lfl-infra-opensearch-nwgtm7wlg7mimhomebq646hnoi.ap-southeast-1.es.amazonaws.com:443"
+      user        => "infadmin"
+      password    => "${OS_PWD}"
+      index       => "lfl-waf-log-nprd-%{+YYYY.MM.dd}"
+      ecs_compatibility => disabled
+      ssl_certificate_verification => false
+    }
+  }
+}
+
+
+#waf_prod.conf
+input {
+  s3 {
+    bucket => "aws-waf-logs-lfl-prd"
+    region => "ap-southeast-1"
+    endpoint => "https://bucket.vpce-08e3e65e2270b9e14-8re1us7f.s3.ap-southeast-1.vpce.amazonaws.com"
+    type => "waf-prd"
+  }
+}
+filter {
+  if [type] == "waf-prd" {
+    json {
+      source => "message"
+      skip_on_invalid_json => true
+    }
+  }
+}
+
+output {
+  if [type] == "waf-prd" {
+    opensearch {
+      hosts       => "https://vpc-lfl-infra-opensearch-nwgtm7wlg7mimhomebq646hnoi.ap-southeast-1.es.amazonaws.com:443"
+      user        => "infadmin"
+      password    => "${OS_PWD}"
+      index       => "lfl-waf-log-prd-%{+YYYY.MM.dd}"
+      ecs_compatibility => disabled
+      ssl_certificate_verification => false
+    }
+  }
+}
+
+
+#linux.conf
+input {
+  cloudwatch_logs {
+    log_group => [ "AWS-CoreApp-Prod-Linux" ]
+    region => "ap-southeast-1"
+    type => "linux"
+  }
+}
+
+filter {
+  if [type] == "linux" {
+    grok {
+      match => { "message" => "%{SYSLOGTIMESTAMP:time} %{DATA:hostname} %{DATA:service}: %{GREEDYDATA:Message}" }
+    }
+    json {
+      source => "message"
+      skip_on_invalid_json => true
+    }
+  }
+}
+
+output {
+  if [type] == "linux" {
+    opensearch {
+      hosts       => "https://vpc-lfl-infra-opensearch-nwgtm7wlg7mimhomebq646hnoi.ap-southeast-1.es.amazonaws.com:443"
+      user        => "infadmin"
+      password    => "${OS_PWD}"
+      index       => "lfl-linux-log-%{+YYYY.MM.dd}"
+      ecs_compatibility => disabled
+      ssl_certificate_verification => false
+    }
+  }
+}
+
+
+#windows_xml.conf
+input {
+  cloudwatch_logs {
+    log_group => [ "AWS-CoreApp-Prod-Linux" ]
+    region => "ap-southeast-1"
+    type => "linux"
+  }
+}
+
+filter {
+  if [type] == "linux" {
+    grok {
+      match => { "message" => "%{SYSLOGTIMESTAMP:time} %{DATA:hostname} %{DATA:service}: %{GREEDYDATA:Message}" }
+    }
+    json {
+      source => "message"
+      skip_on_invalid_json => true
+    }
+  }
+}
+
+output {
+  if [type] == "linux" {
+    opensearch {
+      hosts       => "https://vpc-lfl-infra-opensearch-nwgtm7wlg7mimhomebq646hnoi.ap-southeast-1.es.amazonaws.com:443"
+      user        => "infadmin"
+      password    => "${OS_PWD}"
+      index       => "lfl-linux-log-%{+YYYY.MM.dd}"
+      ecs_compatibility => disabled
+      ssl_certificate_verification => false
+    }
+  }
+}
+
