@@ -41,7 +41,7 @@ aws elbv2 describe-target-groups | jq '.[] | .[] | select(.Port == 443) | .LoadB
 app/albawsgqfbmapigeeext001/0fee11c5cf433acd
 app/albawsgqfbmapigeeint001/1921c1324c96cf55
 
-
+sed 's/.$//'剪掉最后一个字符
 
 
 
