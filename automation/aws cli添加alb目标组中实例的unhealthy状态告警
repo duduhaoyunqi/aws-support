@@ -1,0 +1,17 @@
+
+#单个添加alb成功 --dimensions有两个参数时中间没有逗号。
+aws cloudwatch put-metric-alarm \
+--alarm-name "(S2)ALB:UnHealthyHostCount:*:targetgroup/tgawsgqfbmintranetapiint443/3b507cc2617e0a06" \
+--actions-enabled \
+--ok-actions "arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic" \
+--alarm-actions "arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic" \
+--metric-name "UnHealthyHostCount" \
+--namespace "AWS/ApplicationELB" \
+--statistic "Maximum" \
+--dimensions "Name=TargetGroup,Value=targetgroup/tgawsgqfbmintranetapiint443/3b507cc2617e0a06" "Name=LoadBalancer,Value=app/albawsgqfbmintranetapiint001/2085e8351e33de5c" \
+--period 60 \
+--evaluation-periods 10 \
+--datapoints-to-alarm 10 \
+--threshold 0 \
+--comparison-operator "GreaterThanThreshold" \
+--treat-missing-data "breaching"
