@@ -1,0 +1,18 @@
+您好：
+
+我是AWS技术支援工程George，您提到在CloudTrail日志上观察到关联IP的事件，并且是由elasticloadbalancing.amazonaws.com触发的操作，您想确认是否为ALB的行为。
+
+使用ALB负载均衡器，当发生节点扩容或是缩容时，或是节点异常或需要维护被替换时，ALB的IP地址都会被变更，所以IP地址或是IP数量都会随着您的应用场景进行变更，例如ALB收到大量的请求时，会自动将小的节点替换成大的节点，或是添加更多的节点到ALB内，当负载降低后，ALB也会回收或缩小节点，这些行为都是自动进行更替并不是由人工介入处理，节点IP变化也不会发送任何的通知到客户端，并且无法阻止ALB的IP地址变化的行为，当客户使用ALB时都一定会建议客户使用DNS地址而不是IP地址，因为这是服务架构上的设计。
+
+所以您观察到在CloudTrail日志上的事件，是一个正常ALB会有的行为，由于ALB节点并不在客户的VPC内，但为了要转发请求到客户的目标实例，所以会在节点异动时观察CreateNetworkInterface、AssociateAddress、AttachNetworkInterface、DeleteNetworkInterface事件，因为需要有ENI(网络接口)创建并关联公有IP地址来提供节点的运作。
+
+另外我注意到这ALB有申请启用稳定 IP的功能，请参考以下工单。稳定 IP并不是固定IP，而是ALB在发生扩容或缩容或维护时只会从分配的这六个IP地址去创建新的节点，所以IP地址关联事件还是会发生，并不会都固定不变的。
+https://support.console.aws.amazon.com/support/home#/case/?displayId=11314766391 
+
+IP Address	Active
+52.77.90.167	true
+3.1.165.135	true
+54.255.22.84	false
+18.141.135.61	false
+54.169.132.75	false
+18.136.130.251	false
