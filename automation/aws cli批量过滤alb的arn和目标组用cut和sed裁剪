@@ -1,0 +1,49 @@
+
+scoop安装jq：https://jqlang.github.io/jq/download/
+manual：https://jqlang.github.io/jq/manual/#basic-filters
+看Array/Object Value Iterator: .[]部分来一层一层拆解。
+
+aws elbv2 describe-target-groups
+[
+  {
+    "TargetGroupArn": "arn:aws:elasticloadbalancing:ap-southeast-1:990613592376:targetgroup/tgawsgqfbmtmsint443/171b0c52af799081",
+    "TargetGroupName": "tgawsgqfbmtmsint443",
+    "Protocol": "HTTPS",
+    "Port": 443,
+    "VpcId": "vpc-085b94492a8807e11",
+    "HealthCheckProtocol": "HTTPS",
+    "HealthCheckPort": "traffic-port",
+    "HealthCheckEnabled": true,
+    "HealthCheckIntervalSeconds": 30,
+    "HealthCheckTimeoutSeconds": 5,
+    "HealthyThresholdCount": 5,
+    "UnhealthyThresholdCount": 2,
+    "HealthCheckPath": "/",
+    "Matcher": {
+      "HttpCode": "200"
+    },
+    "LoadBalancerArns": [
+      "arn:aws:elasticloadbalancing:ap-southeast-1:990613592376:loadbalancer/app/albawsgqfbmtmsint001/1610c4a4de3e9ea7"
+    ],
+    "TargetType": "instance",
+    "ProtocolVersion": "HTTP1",
+    "IpAddressType": "ipv4"
+  }
+]
+
+
+aws elbv2 describe-target-groups | jq '.[] | .[] | select(.Port == 443) | .TargetGroupArn'|cut -c 59- |sed 's/.$//'
+targetgroup/tgawsgqfbmapigeeext443/7e301c374febbe0a
+targetgroup/tgawsgqfbmapigeeint443/59103a1873ebb708
+
+
+aws elbv2 describe-target-groups | jq '.[] | .[] | select(.Port == 443) | .LoadBalancerArns| .[]'|cut -c 72- |sed 's/.$//'
+app/albawsgqfbmapigeeext001/0fee11c5cf433acd
+app/albawsgqfbmapigeeint001/1921c1324c96cf55
+
+
+
+
+
+
+
