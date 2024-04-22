@@ -43,6 +43,24 @@ app/albawsgqfbmapigeeint001/1921c1324c96cf55
 
 sed 's/.$//'剪掉最后一个字符
 
+#############################################################
+
+您好:
+
+感谢您联系 AWS 技术支持，我是工程师 Kuo-Shih，谢谢您方才在会议上与我讨论的时间，以下是会议总结:
+
+- 您目前在为新环境配置 CloudWatch Alarm，您的做法是到原有的 CloudWatch Alarm 从 View Source 复制 AWS CLI 后，修改 Account ID, ARN 等变数，之后执行 CLI 来创建新的 CloudWatch Alarm。这个做法在我们会议的测试中是能成功运行的。
+- 您在创建 CloudWatch Alarm 的过程中，需要捞取所有端口为 443 的 Target Group ARN，这在 AWS CLI describe-target-groups 原生没有支持，必须搭配其他指令来做。我们在会议上使用了 jq, cut, sed 命令达成您的需求。
+
+    $ aws elbv2 describe-target-groups | jq '.[] | .[] | select(.Port == 443) | .TargetGroupArn' | cut -c 59- | sed 's/.$//'
+
+jq, cut, sed 的用法我们在会议上有稍加讨论，更多关于 jq 命令的使用方式您也可以参考文档 [1] 的教学。
+
+希望以上信息能给您带来帮助，若您在使用 AWS 服务有其他相关疑问也欢迎再次联系我们，谢谢。 
+
+参考文档:
+[1] https://jqlang.github.io/jq/manual/#basic-filters 
+
 
 
 
