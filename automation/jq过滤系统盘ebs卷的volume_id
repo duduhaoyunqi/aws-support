@@ -195,3 +195,9 @@ $ aws ec2 describe-volumes | jq '.[] | .[] | .Attachments | .[] | select(.Device
 "vol-0fbaf4f52369a77c7"
 "vol-03fcbc5552489086e"
 
+$ aws ec2 describe-volumes | jq '.[] | .[] | .Attachments | .[] | select(.Device == "/dev/sda1") | .VolumeId'| sed 's/.//'| sed 's/.$//'    #sed 's/.//' 去除第一个字符， sed 's/.$//'去除最后一个字符
+vol-0fbaf4f52369a77c7
+vol-03fcbc5552489086e
+
+
+
