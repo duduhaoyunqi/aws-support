@@ -1,0 +1,197 @@
+#jq一步一步过滤出"/dev/sda1"系统盘ebs卷的VolumeId
+
+$ aws ec2 describe-volumes
+{
+    "Volumes": [
+        {
+            "AvailabilityZone": "us-east-1a",
+            "Attachments": [
+                {
+                    "AttachTime": "2013-12-18T22:35:00.000Z",
+                    "InstanceId": "i-1234567890abcdef0",
+                    "VolumeId": "vol-049df61146c4d7901",
+                    "State": "attached",
+                    "DeleteOnTermination": true,
+                    "Device": "/dev/sda1"
+                }
+            ],
+            "Encrypted": true,
+            "KmsKeyId": "arn:aws:kms:us-east-2a:123456789012:key/8c5b2c63-b9bc-45a3-a87a-5513eEXAMPLE,
+            "VolumeType": "gp2",
+            "VolumeId": "vol-049df61146c4d7901",
+            "State": "in-use",
+            "Iops": 100,
+            "SnapshotId": "snap-1234567890abcdef0",
+            "CreateTime": "2019-12-18T22:35:00.084Z",
+            "Size": 8
+        },
+        {
+            "AvailabilityZone": "us-east-1a",
+            "Attachments": [],
+            "Encrypted": false,
+            "VolumeType": "gp2",
+            "VolumeId": "vol-1234567890abcdef0",
+            "State": "available",
+            "Iops": 300,
+            "SnapshotId": "",
+            "CreateTime": "2020-02-27T00:02:41.791Z",
+            "Size": 100
+        }
+    ]
+}
+
+
+$ aws ec2 describe-volumes | jq '.Volumes'  或者$ aws ec2 describe-volumes | jq '.[]' 都可以取出来Volumes这个键的值      
+[
+  {
+    "Attachments": [
+      {
+        "AttachTime": "2024-03-21T10:46:42+00:00",
+        "Device": "/dev/sda1",
+        "InstanceId": "i-04dd47bdfc0325a6b",
+        "State": "attached",
+        "VolumeId": "vol-0d6a2d59b44abaed5",
+        "DeleteOnTermination": true
+      }
+    ],
+    "AvailabilityZone": "ap-southeast-1a",
+    "CreateTime": "2024-03-21T10:46:42.140000+00:00",
+    "Encrypted": true,
+    "KmsKeyId": "arn:aws:kms:ap-southeast-1:394783923101:key/615fd665-5897-4345-aefe-f3b7585a0ec0",
+    "Size": 1,
+    "SnapshotId": "snap-0b76ce0e79836107f",
+    "State": "in-use",
+    "VolumeId": "vol-0d6a2d59b44abaed5",
+    "Iops": 3000,
+    "VolumeType": "gp3",
+    "MultiAttachEnabled": false,
+    "Throughput": 125
+  },
+  {
+    "Attachments": [
+      {
+        "AttachTime": "2024-03-21T10:46:42+00:00",
+        "Device": "/dev/sdb",
+        "InstanceId": "i-04dd47bdfc0325a6b",
+        "State": "attached",
+        "VolumeId": "vol-0427d642acfd4385d",
+        "DeleteOnTermination": true
+      }
+    ],
+    "AvailabilityZone": "ap-southeast-1a",
+    "CreateTime": "2024-03-21T10:46:42.349000+00:00",
+    "Encrypted": true,
+    "KmsKeyId": "arn:aws:kms:ap-southeast-1:394783923101:key/615fd665-5897-4345-aefe-f3b7585a0ec0",
+    "Size": 60,
+    "SnapshotId": "snap-0e5448fc36184ad6b",
+    "State": "in-use",
+    "VolumeId": "vol-0427d642acfd4385d",
+    "Iops": 3000,
+    "VolumeType": "gp3",
+    "MultiAttachEnabled": false,
+    "Throughput": 125
+  }
+]
+
+
+
+
+$ aws ec2 describe-volumes | jq '.Volumes | .[]'  #.[]去掉外面的[]    
+{
+  "Attachments": [
+    {
+      "AttachTime": "2024-03-21T10:46:42+00:00
+      "Device": "/dev/sda1",
+      "InstanceId": "i-04dd47bdfc0325a6b",
+      "State": "attached",
+      "VolumeId": "vol-0d6a2d59b44abaed5",
+      "DeleteOnTermination": true
+    }
+  ],
+  "AvailabilityZone": "ap-southeast-1a",
+  "CreateTime": "2024-03-21T10:46:42.140000+00:00",
+  "Encrypted": true,
+  "KmsKeyId": "arn:aws:kms:ap-southeast-1:394783923101:key/615fd665-5897-4345-aefe-f3b7585a0ec0",
+  "Size": 1,
+  "SnapshotId": "snap-0b76ce0e79836107f",
+  "State": "in-use",
+  "VolumeId": "vol-0d6a2d59b44abaed5",
+  "Iops": 3000,
+  "VolumeType": "gp3",
+  "MultiAttachEnabled": false,
+  "Throughput": 125
+}
+{
+  "Attachments": [
+    {
+      "AttachTime": "2024-03-21T10:46:42+00:00",
+      "Device": "/dev/sdb",
+      "InstanceId": "i-04dd47bdfc0325a6b",
+      "State": "attached",
+      "VolumeId": "vol-0427d642acfd4385d",
+      "DeleteOnTermination": true
+    }
+  ],
+  "AvailabilityZone": "ap-southeast-1a",
+  "CreateTime": "2024-03-21T10:46:42.349000+00:00",
+  "Encrypted": true,
+  "KmsKeyId": "arn:aws:kms:ap-southeast-1:394783923101:key/615fd665-5897-4345-aefe-f3b7585a0ec0",
+  "Size": 60,
+  "SnapshotId": "snap-0e5448fc36184ad6b",
+  "State": "in-use",
+  "VolumeId": "vol-0427d642acfd4385d",
+  "Iops": 3000,
+  "VolumeType": "gp3",
+  "MultiAttachEnabled": false,
+  "Throughput": 125
+}
+
+
+
+$ aws ec2 describe-volumes | jq '.[] | .[] | .Attachments'      #取键为Attachments的值
+[
+  {
+    "AttachTime": "2024-03-21T10:46:42+00:00",
+    "Device": "/dev/sda1",
+    "InstanceId": "i-04dd47bdfc0325a6b",
+    "State": "attached",
+    "VolumeId": "vol-0d6a2d59b44abaed5",
+    "DeleteOnTermination": true
+  }
+]
+[
+  {
+    "AttachTime": "2024-03-21T10:46:42+00:00",
+    "Device": "/dev/sdb",
+    "InstanceId": "i-04dd47bdfc0325a6b",
+    "State": "attached",
+    "VolumeId": "vol-0427d642acfd4385d",
+    "DeleteOnTermination": true
+  }
+]
+
+
+
+
+$ aws ec2 describe-volumes | jq '.[] | .[] | .Attachments | .[] | select(.Device == "/dev/sda1")'    #去掉外面的[]后再select筛选出来Device == "/dev/sda1"的ebs
+{
+  "AttachTime": "2024-02-19T15:30:04+00:00",
+  "Device": "/dev/sda1",
+  "InstanceId": "i-05bedac55a341f4f4",
+  "State": "attached",
+  "VolumeId": "vol-0e2afcc2992698867",
+  "DeleteOnTermination": true
+}
+{
+  "AttachTime": "2024-03-21T10:46:42+00:00",
+  "Device": "/dev/sda1",
+  "InstanceId": "i-04dd47bdfc0325a6b",
+  "State": "attached",
+  "VolumeId": "vol-0d6a2d59b44abaed5",
+  "DeleteOnTermination": true
+}
+
+$ aws ec2 describe-volumes | jq '.[] | .[] | .Attachments | .[] | select(.Device == "/dev/sda1") | .VolumeId'
+"vol-0fbaf4f52369a77c7"
+"vol-03fcbc5552489086e"
+
