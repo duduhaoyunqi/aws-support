@@ -17,7 +17,7 @@ for ec2_id in ${ec2_ids} ; do
     echo $ec2_id >> text.txt
 done
 
-#查看第二行到第三行
+#sed命令取第二行到第三行
 cat text.txt | sed -n '2,3p'
 i-0e179ac315bfc8415
 i-09dba4770769e6521
