@@ -1,0 +1,27 @@
+
+fsx_volume_ids=$(
+aws fsx describe-volumes \
+	--query "Volumes[*].[VolumeId]" \
+	--output text \
+    	--region $aws_region
+)
+
+for fsx_volume_id in ${fsx_volume_ids} ; do
+    echo $fsx_volume_id
+done
+
+#批量添加告警
+for fsx_volume_id in ${fsx_volume_ids} ; do
+    new_fsx_volume_id=$(echo $fsx_volume_id | sed 's/\\r//g')
+    aws cloudwatch put-metric-alarm \
+--alarm-name "(S1)FSX:StorageUsed:*:${new_fsx_volume_id}" \
+--actions-enabled \
+--ok-actions 'arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic' \
+--alarm-actions 'arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic' \
+--evaluation-periods 10 \
+--datapoints-to-alarm 10 \
+--threshold 98 \
+--comparison-operator 'GreaterThanThreshold' \
+--treat-missing-data 'breaching' \
+--metrics '[{"Id":"m2","ReturnData":false,"MetricStat":{"Metric":{"Namespace":"AWS/FSx","MetricName":"StorageCapacity","Dimensions":[{"Name":"VolumeId","Value":"'"${new_fsx_volume_id}"'"},{"Name":"FileSystemId","Value":"fs-0e516f937f56bbc3b"}]},"Period":60,"Stat":"Average"}},{"Id":"m1","ReturnData":false,"MetricStat":{"Metric":{"Namespace":"AWS/FSx","MetricName":"StorageUsed","Dimensions":[{"Name":"VolumeId","Value":"'"${new_fsx_volume_id}"'"},{"Name":"FileSystemId","Value":"fs-0e516f937f56bbc3b"}]},"Period":60,"Stat":"Average"}},{"Id":"e1","Label":"StorageUsed","ReturnData":true,"Expression":"m1/m2*100"}]'	
+done
