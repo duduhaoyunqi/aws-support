@@ -1,0 +1,52 @@
+#添加单个告警：
+aws cloudwatch put-metric-alarm \
+	--alarm-name '(S3)EC2:StatusCheckFailed_Instance:*:wufbmatmsweb02' \
+	--actions-enabled \
+	--ok-actions 'arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic' \
+	--alarm-actions 'arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic' \
+	--metric-name 'StatusCheckFailed_Instance' \
+	--namespace 'AWS/EC2' \
+	--statistic 'Maximum' \
+	--dimensions '[{"Name":"InstanceId","Value":"i-0e2d9477522cfb3a9"}]' \
+	--period 60 \
+	--evaluation-periods 6 \
+	--datapoints-to-alarm 6 \
+	--threshold 0 \
+	--comparison-operator 'GreaterThanThreshold' \
+	--treat-missing-data 'breaching'
+
+ #################################################################################
+#批量添加告警
+
+aws_region=ap-southeast-1
+
+ec2_ids=$(
+aws ec2 describe-instances \
+    --query "Reservations[*].Instances[*].[InstanceId]" \
+    --output text \
+    --region $aws_region
+)
+
+for ec2_id in ${ec2_ids} ; do
+    echo $ec2_id
+done
+
+for ec2_id in ${ec2_ids} ; do
+    new_ec2_id=$(echo $ec2_id | sed 's/\\r//g')
+    ec2_name=$(aws ec2 describe-tags --region ap-southeast-1 --filters "Name=resource-id,Values=${new_ec2_id}" "Name=key,Values=Name" --output text | cut -f5)	#通过实例ID获取实例名称
+	aws cloudwatch put-metric-alarm \
+	--alarm-name "(S3)EC2:StatusCheckFailed_Instance:*:${ec2_name}" \
+	--actions-enabled \
+	--ok-actions 'arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic' \
+	--alarm-actions 'arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic' \
+	--metric-name 'StatusCheckFailed_Instance' \
+	--namespace 'AWS/EC2' \
+	--statistic 'Maximum' \
+	--dimensions '[{"Name":"InstanceId","Value":"'"${new_ec2_id}"'"}]' \
+	--period 60 \
+	--evaluation-periods 6 \
+	--datapoints-to-alarm 6 \
+	--threshold 0 \
+	--comparison-operator 'GreaterThanThreshold' \
+	--treat-missing-data 'breaching'
+done
