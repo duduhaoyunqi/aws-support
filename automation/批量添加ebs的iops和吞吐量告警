@@ -1,0 +1,71 @@
+# (S4)EBS:VolumeThroughput
+aws_region=ap-southeast-1
+
+ebs_volume_ids=$(aws ec2 describe-volumes | jq '.[] | .[] | .Attachments | .[] | .VolumeId'|sed 's/.$//'|sed 's/.//')
+
+for ebs_volume_id in ${ebs_volume_ids} ; do
+    echo $ebs_volume_id >> text.txt
+done
+
+new_volume_ids=$(cat text.txt | sed -n '1,268p' | sed 's/\\r//g')
+for new_volume_id in ${new_volume_ids} ; do
+    aws cloudwatch put-metric-alarm \
+--alarm-name "(S4)EBS:VolumeThroughput:*:${new_volume_id}" \
+--actions-enabled \
+--ok-actions 'arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic' \
+--alarm-actions 'arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic' \
+--evaluation-periods 10 \
+--datapoints-to-alarm 10 \
+--threshold 100000000 \
+--comparison-operator 'GreaterThanThreshold' \
+--treat-missing-data 'notBreaching' \
+--metrics '[{"Id":"m1","ReturnData":false,"MetricStat":{"Metric":{"Namespace":"AWS/EBS","MetricName":"VolumeReadBytes","Dimensions":[{"Name":"VolumeId","Value":"'"$new_volume_id"'"}]},"Period":120,"Stat":"Sum"}},{"Id":"m2","ReturnData":false,"MetricStat":{"Metric":{"Namespace":"AWS/EBS","MetricName":"VolumeWriteBytes","Dimensions":[{"Name":"VolumeId","Value":"'"$new_volume_id"'"}]},"Period":120,"Stat":"Sum"}},{"Id":"m3","ReturnData":false,"MetricStat":{"Metric":{"Namespace":"AWS/EBS","MetricName":"VolumeIdleTime","Dimensions":[{"Name":"VolumeId","Value":"'"$new_volume_id"'"}]},"Period":120,"Stat":"Sum"}},{"Id":"e1","Label":"VolumeThroughput","ReturnData":true,"Expression":"IF(m3>(PERIOD(m3)*4/5), 0, (m1+m2)/(PERIOD(m3)-m3))"}]'
+done
+
+#(S3)EBS:VolumeThroughput
+new_volume_ids=$(cat text.txt | sed -n '1,268p' | sed 's/\\r//g')
+for new_volume_id in ${new_volume_ids} ; do
+    aws cloudwatch put-metric-alarm \
+--alarm-name "(S3)EBS:VolumeThroughput:*:${new_volume_id}" \
+--actions-enabled \
+--ok-actions 'arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic' \
+--alarm-actions 'arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic' \
+--evaluation-periods 10 \
+--datapoints-to-alarm 10 \
+--threshold 112500000 \
+--comparison-operator 'GreaterThanThreshold' \
+--treat-missing-data 'notBreaching' \
+--metrics '[{"Id":"m1","ReturnData":false,"MetricStat":{"Metric":{"Namespace":"AWS/EBS","MetricName":"VolumeReadBytes","Dimensions":[{"Name":"VolumeId","Value":"'"$new_volume_id"'"}]},"Period":120,"Stat":"Sum"}},{"Id":"m2","ReturnData":false,"MetricStat":{"Metric":{"Namespace":"AWS/EBS","MetricName":"VolumeWriteBytes","Dimensions":[{"Name":"VolumeId","Value":"'"$new_volume_id"'"}]},"Period":120,"Stat":"Sum"}},{"Id":"m3","ReturnData":false,"MetricStat":{"Metric":{"Namespace":"AWS/EBS","MetricName":"VolumeIdleTime","Dimensions":[{"Name":"VolumeId","Value":"'"$new_volume_id"'"}]},"Period":120,"Stat":"Sum"}},{"Id":"e1","Label":"VolumeThroughput","ReturnData":true,"Expression":"IF(m3>(PERIOD(m3)*4/5), 0, (m1+m2)/(PERIOD(m3)-m3))"}]'
+done
+
+#(S4)EBS:VolumeIops
+new_volume_ids=$(cat text.txt | sed -n '1,5p' | sed 's/\\r//g')
+for new_volume_id in ${new_volume_ids} ; do
+aws cloudwatch put-metric-alarm \
+--alarm-name "(S4)EBS:VolumeIops:*:${new_volume_id}" \
+--actions-enabled \
+--ok-actions 'arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic' \
+--alarm-actions 'arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic' \
+--evaluation-periods 10 \
+--datapoints-to-alarm 10 \
+--threshold 2400 \
+--comparison-operator 'GreaterThanThreshold' \
+--treat-missing-data 'notBreaching' \
+--metrics '[{"Id":"m3","ReturnData":false,"MetricStat":{"Metric":{"Namespace":"AWS/EBS","MetricName":"VolumeIdleTime","Dimensions":[{"Name":"VolumeId","Value":"'"${new_volume_id}"'"}]},"Period":120,"Stat":"Sum"}},{"Id":"m1","ReturnData":false,"MetricStat":{"Metric":{"Namespace":"AWS/EBS","MetricName":"VolumeReadOps","Dimensions":[{"Name":"VolumeId","Value":"'"${new_volume_id}"'"}]},"Period":120,"Stat":"Sum"}},{"Id":"m2","ReturnData":false,"MetricStat":{"Metric":{"Namespace":"AWS/EBS","MetricName":"VolumeWriteOps","Dimensions":[{"Name":"VolumeId","Value":"'"${new_volume_id}"'"}]},"Period":120,"Stat":"Sum"}},{"Id":"e1","Label":"VolumeIops","ReturnData":true,"Expression":"IF(m3>(PERIOD(m3)*4/5), 0, (m1+m2)/(PERIOD(m3)-m3))"}]'
+done
+
+#(S3)EBS:VolumeIops
+new_volume_ids=$(cat text.txt | sed -n '1,5p' | sed 's/\\r//g')
+for new_volume_id in ${new_volume_ids} ; do
+aws cloudwatch put-metric-alarm \
+--alarm-name "(S3)EBS:VolumeIops:*:${new_volume_id}" \
+--actions-enabled \
+--ok-actions 'arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic' \
+--alarm-actions 'arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic' \
+--evaluation-periods 10 \
+--datapoints-to-alarm 10 \
+--threshold 2700 \
+--comparison-operator 'GreaterThanThreshold' \
+--treat-missing-data 'notBreaching' \
+--metrics '[{"Id":"m3","ReturnData":false,"MetricStat":{"Metric":{"Namespace":"AWS/EBS","MetricName":"VolumeIdleTime","Dimensions":[{"Name":"VolumeId","Value":"'"${new_volume_id}"'"}]},"Period":120,"Stat":"Sum"}},{"Id":"m1","ReturnData":false,"MetricStat":{"Metric":{"Namespace":"AWS/EBS","MetricName":"VolumeReadOps","Dimensions":[{"Name":"VolumeId","Value":"'"${new_volume_id}"'"}]},"Period":120,"Stat":"Sum"}},{"Id":"m2","ReturnData":false,"MetricStat":{"Metric":{"Namespace":"AWS/EBS","MetricName":"VolumeWriteOps","Dimensions":[{"Name":"VolumeId","Value":"'"${new_volume_id}"'"}]},"Period":120,"Stat":"Sum"}},{"Id":"e1","Label":"VolumeIops","ReturnData":true,"Expression":"IF(m3>(PERIOD(m3)*4/5), 0, (m1+m2)/(PERIOD(m3)-m3))"}]'
+done
