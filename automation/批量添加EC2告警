@@ -50,3 +50,31 @@ for ec2_id in ${ec2_ids} ; do
 	--comparison-operator 'GreaterThanThreshold' \
 	--treat-missing-data 'breaching'
 done
+
+###############################################################
+
+DDH实例只配置System告警不配置auto-recover动作
+new_ec2_ids=$(aws ec2 describe-instances     --filters "Name=instance-state-name,Values=running" "Name=tenancy,Values=host,dedicated"     --query "Reservations[*].Instances[*].[InstanceId]"     --output text --max-items 10000 --region $aws_region | sed 's/\\r//g')
+
+for ec2_id in ${new_ec2_ids} ; do
+    echo $ec2_id
+done
+
+for ec2_id in ${new_ec2_ids} ; do
+    ec2_name=$(aws ec2 describe-tags --region ap-southeast-1 --filters "Name=resource-id,Values=${ec2_id}" "Name=key,Values=Name" --output text | cut -f5)	
+aws cloudwatch put-metric-alarm \
+--alarm-name "(S3)EC2:StatusCheckFailed_System:*:${ec2_name}" \
+--actions-enabled \
+--ok-actions 'arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic' \
+--alarm-actions 'arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic' \
+--metric-name 'StatusCheckFailed_System' \
+--namespace 'AWS/EC2' \
+--statistic 'Maximum' \
+--dimensions '[{"Name":"InstanceId","Value":"'"${ec2_id}"'"}]' \
+--period 60 \
+--evaluation-periods 1 \
+--datapoints-to-alarm 1 \
+--threshold 0 \
+--comparison-operator 'GreaterThanThreshold' \
+--treat-missing-data 'missing'
+done
