@@ -1,6 +1,9 @@
 
 #添加StatusCheckFailed_System(S3)告警，EC2实例有上百台，避免会话过期批量添加告警时中断，采用分段上传。
+
 ################################################################################################
+
+#StatusCheckFailed_System(S3)
 
 aws_region=ap-southeast-1
 
@@ -41,4 +44,46 @@ aws cloudwatch put-metric-alarm \
 --threshold 0 \
 --comparison-operator 'GreaterThanThreshold' \
 --treat-missing-data 'missing'
+done
+
+#############################################################################
+
+#StatusCheckFailed_Instance(S3)
+
+aws_region=ap-southeast-1
+
+ec2_ids=$(
+aws ec2 describe-instances \
+    --query "Reservations[*].Instances[*].[InstanceId]" \
+    --output text \
+    --region $aws_region
+)
+
+for ec2_id in ${ec2_ids} ; do
+    echo $ec2_id
+done
+
+#输出到文件
+for ec2_id in ${ec2_ids} ; do
+    echo $ec2_id >> text.txt
+done
+
+new_ec2_ids=$(cat text.txt | sed -n '1,20p' | sed 's/\\r//g')
+for ec2_id in ${new_ec2_ids} ; do
+    ec2_name=$(aws ec2 describe-tags --region ap-southeast-1 --filters "Name=resource-id,Values=${ec2_id}" "Name=key,Values=Name" --output text | cut -f5)	
+	aws cloudwatch put-metric-alarm \
+	--alarm-name "(S3)EC2:StatusCheckFailed_Instance:*:${ec2_name}" \
+	--actions-enabled \
+	--ok-actions 'arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic' \
+	--alarm-actions 'arn:aws:sns:ap-southeast-1:990613592376:CloudWatch_Alarms_Topic' \
+	--metric-name 'StatusCheckFailed_Instance' \
+	--namespace 'AWS/EC2' \
+	--statistic 'Maximum' \
+	--dimensions '[{"Name":"InstanceId","Value":"'"${ec2_id}"'"}]' \
+	--period 60 \
+	--evaluation-periods 6 \
+	--datapoints-to-alarm 6 \
+	--threshold 0 \
+	--comparison-operator 'GreaterThanThreshold' \
+	--treat-missing-data 'breaching'
 done
