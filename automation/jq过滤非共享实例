@@ -1,0 +1,19 @@
+
+您好，
+
+我是 Bright，很高兴能与您在线上会议讨论，以下是讨论内容的摘要：
+1. Tenancy filter 的意思：
+    * default: shared
+    * dedicated: dedicated instance
+    * host: dedicated host
+
+2. 可以用以下指令筛选出 Tenancy 不等于 default 的实例
+```
+## Tenancy 不等于 default
+$ aws ec2 describe-instances | jq '.Reservations[].Instances[] | select(.Placement.Tenancy != "default")'
+
+## 只显示 instance_id、tenancy 资讯
+$ aws ec2 describe-instances | jq '.Reservations[].Instances[] | select(.Placement.Tenancy != "dedicated") | {InstanceId: .InstanceId, Tenancy: .Placement.Tenancy}'
+```
+
+感谢您，祝您工作顺心。
