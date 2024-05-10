@@ -1,0 +1,20 @@
+客户您好，
+
+感谢您加入稍早前的会议，这里是会议总结：
+
+您希望配置S3 interface endpoint 来让opensearch进行连接，会议中我们配置完成了S3 interface endpoint。
+
+配置完成后，如果您希望通过S3 interface endpoint来访问，则需要修改S3访问链接的网址，比如：
+
+原始S3网址链接：https://bucketsxxx.s3.us-west-2.amazonaws.com/E2LZL88A4G7.202-039.06ba8143.gz 
+使用S3 endpoint链接：https://bucketsxxx.s3.vpce-xxxxxx-xmqri.s3.us-west-2.vpce.amazonaws.com/E2LZL88A4G7.202-039.06ba8143.gz 
+
+即替换“s3.us-west-2.amazonaws.com” 为“vpce-xxxxxx-xmqri.s3.us-west-2.vpce.amazonaws.com”
+
+---
+
+此外，如果您希望可以在不修改S3网址链接情况下通过S3 interface endpoint进行连接，您可以开启“Enable private DNS names”功能。开启后，您可以直接通过S3原有网址链接直接访问，省去了上面提到的替换网址操作。
+
+以下是开启private DNS names步骤：
+1. endpoint页面选中interface endpoint，选择Action --- Modify private DNS name
+2. 选中“Enable for this endpoint”
