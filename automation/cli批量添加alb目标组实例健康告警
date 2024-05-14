@@ -1,0 +1,90 @@
+
+Plugins，
+
+很高兴能在线上会议与您沟通，在解决了您 FSX 相关的问题后，我在线下为您研究了配置 ALB 告警的做法。
+
+参考您之前的做法，首先，您可以用以下指令来抓取 ALB 的 ARN：
+
+=================================================
+aws_region=ap-southeast-1
+
+elb_ids=$(
+aws elbv2 describe-load-balancers \
+    --query LoadBalancers[*].LoadBalancerArn \
+    --output text \
+    --region $aws_region \
+)
+=================================================
+
+接着，您可以建一个循环并在里面包含另一个循环，以下为示例：
+
+1. 先通过 "describe-target-groups" 指令抓取同个 ALB 内所有的 target group
+2. 使用一个循环来针对每个 target group 来部署告警
+
+=================================================
+for elb_id in ${elb_ids} ; do
+   elb_name=$(echo $elb_id | sed -e 's#.*loadbalancer/\(\)#\1#')
+   target_group_ids=$(
+    aws elbv2 describe-target-groups \
+    --load-balancer-arn ${elb_id} \
+    --query TargetGroups[*].TargetGroupArn \
+    --output text \
+    --region $aws_region 
+  )
+  for target_group_id in ${target_group_ids} ; do
+    new_target_group_id=$(echo $target_group_id | sed -e 's#.*targetgroup/\(\)#\1#')
+    aws cloudwatch put-metric-alarm \
+    --alarm-name "(S2)ALB:UnHealthyHostCount:*:targetgroup/${new_target_group_id}" \
+    --actions-enabled \
+    --ok-actions 'arn:aws:sns:ap-southeast-1:644690924801:CloudWatch_Alarms_Topic' \
+    --alarm-actions 'arn:aws:sns:ap-southeast-1:644690924801:CloudWatch_Alarms_Topic' \
+    --metric-name 'UnHealthyHostCount' \
+    --namespace 'AWS/ApplicationELB' \
+    --statistic 'Maximum' \
+    --dimensions "Name"="TargetGroup","Value"="targetgroup/${new_target_group_id}" "Name"="LoadBalancer","Value"=${elb_name} \
+    --period 60 \
+    --evaluation-periods 10 \
+    --datapoints-to-alarm 10 \
+    --threshold 0 \
+    --comparison-operator 'GreaterThanThreshold' \
+    --treat-missing-data 'breaching'
+  done
+done
+=================================================
+
+我在自己的测试环境中建立两个 ALB，每个 ALB 都有两个 target group，经过以上的方式，我能成功建立四个告警，您可以在您的环境也测试一下。
+
+希望以上测试的内容能够帮助到您，如果您有任何疑问或需要进一步的协助，欢迎您通过案例回复，我将持续跟进，感谢您对 AWS 技术支持团队的支持。
+
+############################################################################################
+
+#自己测试：
+elb_ids=$(cat text.txt | sed -n '1,30p' | sed 's/\\r//g')
+for elb_id in ${elb_ids} ; do
+   elb_name=$(echo $elb_id | sed -e 's#.*loadbalancer/\(\)#\1#')
+   target_group_ids=$(
+    aws elbv2 describe-target-groups \
+    --load-balancer-arn ${elb_id} \
+    --query TargetGroups[*].TargetGroupArn \
+    --output text \
+    --region $aws_region 
+  )
+  for target_group_id in ${target_group_ids} ; do
+    new_target_group_id=$(echo $target_group_id | sed -e 's#.*targetgroup/\(\)#\1#')
+    aws cloudwatch put-metric-alarm \
+    --alarm-name "(S3)ALB:UnHealthyHostCount:*:targetgroup/${new_target_group_id}" \
+    --actions-enabled \
+    --ok-actions 'arn:aws:sns:ap-southeast-1:564296217172:CloudWatch_Alarms_Topic' \
+    --alarm-actions 'arn:aws:sns:ap-southeast-1:564296217172:CloudWatch_Alarms_Topic' \
+    --metric-name 'UnHealthyHostCount' \
+    --namespace 'AWS/ApplicationELB' \
+    --statistic 'Maximum' \
+    --dimensions "Name"="TargetGroup","Value"="targetgroup/${new_target_group_id}" "Name"="LoadBalancer","Value"=${elb_name} \
+    --period 60 \
+    --evaluation-periods 5 \
+    --datapoints-to-alarm 5 \
+    --threshold 0 \
+    --comparison-operator 'GreaterThanThreshold' \
+    --treat-missing-data 'breaching'
+  done
+done
