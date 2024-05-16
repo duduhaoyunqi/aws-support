@@ -78,3 +78,81 @@
 			}
 		]
 	}
+
+
+#######################################################################################################################
+ModifyVolume Event record
+
+{
+    "eventVersion": "1.09",
+    "userIdentity": {
+        "type": "AssumedRole",
+        "principalId": "AROAV4ZOWCJJLOYVIZKWX:ACMKVD015@maersk.com",
+        "arn": "arn:aws:sts::405435454034:assumed-role/AWSReservedSSO_MaerskOCFMPAdmin_29566c2303573c2a/ACMKVD015@maersk.com",
+        "accountId": "405435454034",
+        "accessKeyId": "ASIAV4ZOWCJJNKQ34M7G",
+        "sessionContext": {
+            "sessionIssuer": {
+                "type": "Role",
+                "principalId": "AROAV4ZOWCJJLOYVIZKWX",
+                "arn": "arn:aws:iam::405435454034:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_MaerskOCFMPAdmin_29566c2303573c2a",
+                "accountId": "405435454034",
+                "userName": "AWSReservedSSO_MaerskOCFMPAdmin_29566c2303573c2a"
+            },
+            "attributes": {
+                "creationDate": "2024-05-16T02:38:26Z",
+                "mfaAuthenticated": "false"
+            }
+        }
+    },
+    "eventTime": "2024-05-16T02:48:28Z",
+    "eventSource": "ec2.amazonaws.com",
+    "eventName": "ModifyVolume",
+    "awsRegion": "ap-southeast-1",
+    "sourceIPAddress": "157.254.20.101",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
+    "requestParameters": {
+        "ModifyVolumeRequest": {
+            "VolumeId": "vol-0723ec0da5de311ed",
+            "VolumeType": "gp3",
+            "Size": 100,
+            "Throughput": 125,
+            "Iops": 4000
+        }
+    },
+    "responseElements": {
+        "ModifyVolumeResponse": {
+            "xmlns": "http://ec2.amazonaws.com/doc/2016-11-15/",
+            "volumeModification": {
+                "targetIops": 4000,
+                "originalMultiAttachEnabled": false,
+                "targetThroughput": 125,
+                "originalThroughput": 125,
+                "originalIops": 3000,
+                "modificationState": "modifying",
+                "targetSize": 100,
+                "targetVolumeType": "gp3",
+                "volumeId": "vol-0723ec0da5de311ed",
+                "progress": 0,
+                "startTime": "2024-05-16T02:48:28.000Z",
+                "originalSize": 100,
+                "targetMultiAttachEnabled": false,
+                "originalVolumeType": "gp3"
+            },
+            "requestId": "58f9422d-dbe0-4dd1-9a5d-a14e3fb830f0"
+        }
+    },
+    "requestID": "58f9422d-dbe0-4dd1-9a5d-a14e3fb830f0",
+    "eventID": "a65b2032-9773-4b74-bc9f-db70e03b65f6",
+    "readOnly": false,
+    "eventType": "AwsApiCall",
+    "managementEvent": true,
+    "recipientAccountId": "405435454034",
+    "eventCategory": "Management",
+    "tlsDetails": {
+        "tlsVersion": "TLSv1.3",
+        "cipherSuite": "TLS_AES_128_GCM_SHA256",
+        "clientProvidedHostHeader": "ec2.ap-southeast-1.amazonaws.com"
+    },
+    "sessionCredentialFromConsole": "true"
+}
