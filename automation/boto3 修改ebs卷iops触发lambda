@@ -1,0 +1,80 @@
+您好，
+
+我是 AWS 技术支持工程师 Harry，很高兴能协助您。
+
+我理解您的问题如下，若是有所误解还请您告诉我。
+
+#### 问题
+
+    稍早透过网上会议我理解到您想要使用EventBridge来监控EBS的修改状态，同时想要针对如IOPS等细部异动来做细分。
+
+#### 说明
+
+    稍早在网上会议的过程中，我们讨论到在EBS卷无论修改什么选项都是调用到相同的API ModifyVolume，因此我们需要去比对该事件中的资讯，才能够确认到调用ModifyVolume API具体是修改EBS卷的类型、大小、IOPS和性能哪一个项目，然而在EventBridge的事件过滤器，较难检查事件资讯中的值是否有所不同，因此我们较难直接透过过滤事件的json来确认修该的讯息，但是我透过以下方式配置EventBridge规则，搭配Lambda来确认EBS的修改细节。
+
+    以下是我的测试结果供您参考
+    创建一个EventBridge规则使用以下事件模式
+    事件模式
+    {
+	  "source": ["aws.ec2"],
+	  "detail-type": ["AWS API Call via CloudTrail"],
+	  "detail": {
+	    "eventSource": ["ec2.amazonaws.com"],
+	    "eventName": ["ModifyVolume"]
+	  }
+	}
+
+	并且在目标选择Lambda 函数
+
+	以下为Lambda 函数内容，供您参考，以下函数内容会检查ModifyVolume事件中的IOPS是否有进行修改，若有修改则透过SNS进行通知。
+	--------
+	import json
+	import boto3
+
+	sns_client = boto3.client('sns')
+	sns_topic_arn = '这里输入您的SNS ARN'
+
+	def lambda_handler(event, context):
+
+	    detail = event.get('detail', {})
+	    request_parameters = detail.get('requestParameters', {}).get('ModifyVolumeRequest', {})
+	    new_iops = request_parameters.get('Iops')
+
+
+	    response_elements = detail.get('responseElements', {}).get('ModifyVolumeResponse', {})
+	    volume_modification = response_elements.get('volumeModification', {})
+
+	    old_iops = volume_modification.get('originalIops')
+
+
+	    if new_iops is not None and old_iops is not None and new_iops != old_iops:
+	        message = f"EBS volume IOPS has been modified. Old IOPS: {old_iops}, New IOPS: {new_iops}"
+	        sns_client.publish(
+	            TopicArn=sns_topic_arn,
+	            Message=message,
+	            Subject='EBS Volume IOPS Modification Notification'
+	        )
+	        return {
+	            'statusCode': 200,
+	            'body': json.dumps('Notification sent!')
+	        }
+
+	    return {
+	        'statusCode': 200,
+	        'body': json.dumps('No IOPS modification detected or IOPS values missing.')
+	    }
+
+	---------
+	以外，若您需要发送SNS通知，请确保Lambda 函数角色拥有SNS Publish权限，具体权限策略如下，
+	{
+		"Version": "2012-10-17",
+		"Statement": [
+			{
+				"Effect": "Allow",
+				"Action": [
+					"sns:Publish"
+				],
+				"Resource": "这里输入您的SNS ARN"
+			}
+		]
+	}
