@@ -156,3 +156,43 @@ ModifyVolume Event record
     },
     "sessionCredentialFromConsole": "true"
 }
+
+###############################################################################################
+
+https://docs.aws.amazon.com/zh_cn/eventbridge/latest/userguide/eb-events-structure.html
+
+您好，
+
+我是 AWS 技术支持工程师 Harry，很高兴能协助您。
+
+您想要了解如何在不透过CloudWatch日志和Cloudtrail，显示出event中detail的值。
+
+经过我的测试我在return中，透过以下方式，是可以直接在主控台测试中印出detail的值的，此外也请注意，我在测试事件中的事件json是透过eventbridge获得detail-type": "AWS API Call via CloudTrail事件json内容。
+
+return {
+	'statusCode': 200,
+	'body': json.dumps(str(detail))
+}
+
+
+#############################################################
+
+import json
+
+def lambda_handler(event, context):
+    # TODO implement
+    detail = event.get('detail', {})
+    return {
+	        'statusCode': 200,
+	        'body': json.dumps(str(detail))
+    }
+
+#############################################################
+Test Event Name
+test
+
+Response
+{
+  "statusCode": 200,
+  "body": "\"{'eventVersion': '1.09', 'userIdentity': {'type': 'IAMUser', 'principalId': 'AIDATYVLFUPAJ3FPDFXGA', 'arn': 'arn:aws:iam::259130762176:user/Key_Diao', 'accountId': '259130762176', 'accessKeyId': 'ASIATYVLFUPACXS5VNPK', 'userName': 'Key_Diao', 'sessionContext': {'attributes': {'creationDate': '2024-05-17T03:11:28Z', 'mfaAuthenticated': 'false'}}}, 'eventTime': '2024-05-17T03:34:15Z', 'eventSource': 'ec2.amazonaws.com', 'eventName': 'ModifyVolume', 'awsRegion': 'ap-southeast-1', 'sourceIPAddress': '222.71.237.18', 'userAgent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.289 Safari/537.36', 'requestParameters': {'ModifyVolumeRequest': {'VolumeId': 'vol-0cc257cc0e7ccd6d3', 'VolumeType': 'gp2', 'Size': 1}}, 'responseElements': {'ModifyVolumeResponse': {'xmlns': 'http://ec2.amazonaws.com/doc/2016-11-15/', 'volumeModification': {'targetIops': 100, 'originalMultiAttachEnabled': False, 'originalThroughput': 125, 'originalIops': 3000, 'modificationState': 'modifying', 'targetSize': 1, 'targetVolumeType': 'gp2', 'volumeId': 'vol-0cc257cc0e7ccd6d3', 'progress': 0, 'startTime': '2024-05-17T03:34:15.000Z', 'originalSize': 1, 'targetMultiAttachEnabled': False, 'originalVolumeType': 'gp3'}, 'requestId': '1d8307d9-5c08-4ddc-9bfd-fd5ed66344c0'}}, 'requestID': '1d8307d9-5c08-4ddc-9bfd-fd5ed66344c0', 'eventID': '282ded77-8069-405b-b91e-339dd43d8f6b', 'readOnly': False, 'eventType': 'AwsApiCall', 'managementEvent': True, 'recipientAccountId': '259130762176', 'eventCategory': 'Management', 'tlsDetails': {'tlsVersion': 'TLSv1.3', 'cipherSuite': 'TLS_AES_128_GCM_SHA256', 'clientProvidedHostHeader': 'ec2.ap-southeast-1.amazonaws.com'}, 'sessionCredentialFromConsole': 'true'}\""
+}
