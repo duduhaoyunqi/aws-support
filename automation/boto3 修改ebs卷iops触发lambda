@@ -158,6 +158,7 @@ ModifyVolume Event record
 }
 
 ###############################################################################################
+三种方式可以看到：1.eventbridge rules里配置target为log group；2.cloudtrail event里看到详细内容；3.return输出
 
 https://docs.aws.amazon.com/zh_cn/eventbridge/latest/userguide/eb-events-structure.html
 
