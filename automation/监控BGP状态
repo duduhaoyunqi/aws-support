@@ -1,0 +1,23 @@
+
+您好：
+
+感谢您联系 AWS 技术支持，我是工程师 Bright，今天将由我来协助您的工单。
+
+以下一一回答您的问题：
+1. 如何使用CloudWatch监控Direct Connect虚拟接口的BGP Status?
+目前 DX 没有直接提供 BGP 相关的 Cloudwatch 指标，所以如果您想直接监控 BGP 状态，会需要自行创建一些监控机制，例如以下：
+    (1). 使用定期触发的 Lambda 函数[1]，用 DescribeVirtualInterfaces API [2]抓取 vif 的 BGP 状态并推送到 Cloudwatch [3]。
+    (2). 如果您实际上是想监控 AWS VPC 到地端网路的联通性与延迟，可以考虑使用 Cloudwatch Network Monitor [4][5]。
+
+2.请帮忙解释为什么CloudWatch中DX只有以下 Metrics
+这是因为您的 DX 都是托管连接(hosted connection)，只有专用连接(dedicated connection)才有 ConnectionBpsEgress 等指标[6]。
+
+参考资料：
+[2] 教程：使用 EventBridge 安排 AWS Lambda 函数
+https://docs.aws.amazon.com/zh_cn/eventbridge/latest/userguide/eb-run-lambda-schedule.html 
+
+[2] DescribeVirtualInterfaces
+https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DescribeVirtualInterfaces.html 
+
+[3] PutMetricData
+https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricData.html 
