@@ -21,3 +21,31 @@ https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DescribeVirtua
 
 [3] PutMetricData
 https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricData.html 
+
+#########################################################################################################################
+AWS内部代码：
+
+!/usr/bin/python
+# Monitors the state of all DX Virtual Interfaces in the account and
+# publishes a custom CloudWatch Metric for the status --- 1 = BGP Up, 0 = down
+import boto.ec2.cloudwatch
+import boto.directconnect
+AWS_Regions=["eu-west-1"]
+CloudWatch_Region="eu-west-1"
+cw = boto.ec2.cloudwatch.connect_to_region(CloudWatch_Region)
+
+for region in AWS_Regions:
+  conn = boto.directconnect.connect_to_region(region)
+  vifs = conn.describe_virtual_interfaces()
+  for vif in vifs['virtualInterfaces']:
+    vif_id = vif['virtualInterfaceId']
+    vif_state = vif['virtualInterfaceState']
+    vif_name = vif['virtualInterfaceName']
+#    print vif_id+" ("+vif_name+") = "+vif_state
+    if vif_state == "available":
+      vif_up = 1
+    else:
+      vif_up = 0
+ #   print vif_id+" has status "+str(vif_up)
+    cw.put_metric_data("DX-VIF-Status", vif_id, value=vif_up, dimensions={'VIF': vif_id, 'Name': vif_name})
+
