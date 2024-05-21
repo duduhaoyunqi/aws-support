@@ -23,7 +23,7 @@ https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DescribeVirtua
 https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricData.html 
 
 #########################################################################################################################
-
+https://stackify.com/custom-metrics-aws-lambda/
 #AWS内部代码实现使用定期触发的 Lambda 函数，用 DescribeVirtualInterfaces API 抓取 vif 的 BGP 状态并推送到 Cloudwatch。
 
 !/usr/bin/python
