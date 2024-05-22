@@ -50,3 +50,52 @@ for region in AWS_Regions:
  #   print vif_id+" has status "+str(vif_up)
     cw.put_metric_data("DX-VIF-Status", vif_id, value=vif_up, dimensions={'VIF': vif_id, 'Name': vif_name})
 
+
+##############################################################################
+Plugins，
+
+我是 Edwin，我会继续处理您的案例，根据您之前跟 Peter 的沟通，我了解您希望抓取 DX VIF 的 BGP 状态并推送到 CloudWatch。我在实验环境中测试了一下这样的部署，我的脚本能够成功达到这样的目的，脚本内容您可以参考附件。
+
+我的脚本逻辑大概是先通过 "describe_virtual_interfaces" 函数[1]抓取 VIF 的 BGP 状态，若为 "UP"，则调用 "put_metric_data" 函数[2]来推送一个数值为 "1" 的数据点，其他状态则一律推送一个数值为 "0" 的数据点，指标的维度我目前只用了 VIF ID，您还可以加入其他维度。
+
+祝工作顺利！
+
+参考文档：
+[1] https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/directconnect/client/describe_virtual_interfaces.html 
+[2] https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/cloudwatch/client/put_metric_data.html 
+
+import boto3
+
+dxclient = boto3.client('directconnect', region_name='ap-southeast-1')
+cwclient = boto3.client('cloudwatch', region_name='ap-southeast-1')
+
+def put_vif_metric_data (id, state):
+	response = cwclient.put_metric_data(
+		Namespace='DX-VIF-Status',
+		MetricData=[
+			{
+				'MetricName': 'DX-VIF-BGP-Status',
+				'Dimensions': [
+					{
+						'Name': 'VirtualInterfaceId',
+						'Value': id
+					},
+				],
+				'Value': state,
+				'Unit': 'None'
+			},
+		],
+	)
+
+virtualInterfaces = dxclient.describe_virtual_interfaces()['virtualInterfaces']
+
+for v in virtualInterfaces:
+	vif_id = v['virtualInterfaceId']
+	#print(vif_id)
+	status = v['bgpPeers'][0]['bgpStatus']
+	#print(status)
+	if status == 'up':
+		put_vif_metric_data(vif_id, 1)
+	else:
+		put_vif_metric_data(vif_id, 0)
+
