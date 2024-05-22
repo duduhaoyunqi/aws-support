@@ -88,6 +88,7 @@ Serial Number:                      vol05a752e61de181a62		/dev/sde	100		/dev/sde
 
 步骤：
 prepare: 在/etc/fstab里注释掉/u01的开机自动挂载
+然后在AWS backup里找到指定日期的AMI，AMI详细信息里可以看到具体ebs的snapshot-id，通过snapshot-id在snapshot里还原ebs卷。
 1. Stop the instance;
 2. Detach the old volumes;
 3. Attach the new restored volumes;
