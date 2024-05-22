@@ -1,0 +1,103 @@
+[root@LVWSBLRALRDPD01 ~]# df -h
+Filesystem                                                           Size  Used Avail Use% Mounted on
+devtmpfs                                                             125G     0  125G   0% /dev
+tmpfs                                                                125G     0  125G   0% /dev/shm
+tmpfs                                                                125G  450M  125G   1% /run
+tmpfs                                                                125G     0  125G   0% /sys/fs/cgroup
+/dev/mapper/rootVg-root                                               79G   47G   33G  60% /
+/dev/nvme0n1p1                                                      1014M  252M  763M  25% /boot
+/dev/mapper/u01Vg-u01Lv                                              394G  212G  166G  57% /u01
+/dev/mapper/u02Vg-u02Lv                                              542G  354G  163G  69% /u02
+tmpfs                                                                 25G   12K   25G   1% /run/user/42
+tmpfs                                                                 25G     0   25G   0% /run/user/0
+//LVWSNASALFSPD01.ALPHA.LFTLTD.NET/isgpd$/Images/ImageMgr/PhotoRepo  973G  6.3G  967G   1% /mnt/PhotoRepo
+tmpfs                                                                 25G     0   25G   0% /run/user/8004
+tmpfs                                                                 25G     0   25G   0% /run/user/8001
+[root@LVWSBLRALRDPD01 ~]# lvs
+  LV     VG     Attr       LSize    Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  root   rootVg -wi-ao----  <79.00g
+  swapLv swapVg -wi-ao----  <64.00g
+  u01Lv  u01Vg  -wi-ao---- <399.91g
+  u02Lv  u02Vg  -wi-ao----  549.84g
+[root@LVWSBLRALRDPD01 ~]# vgs
+  VG     #PV #LV #SN Attr   VSize    VFree
+  rootVg   1   1   0 wz--n-  <79.00g    0
+  swapVg   1   1   0 wz--n-  <64.00g    0
+  u01Vg    4   1   0 wz--n- <399.91g    0
+  u02Vg    5   1   0 wz--n-  549.84g    0
+[root@LVWSBLRALRDPD01 ~]# cat /etc/fstab
+
+#
+# /etc/fstab
+# Created by anaconda on Tue Jul 25 18:36:52 2017
+#
+# Accessible filesystems, by reference, are maintained under '/dev/disk'
+# See man pages fstab(5), findfs(8), mount(8) and/or blkid(8) for more info
+#
+/dev/mapper/rootVg-root /       xfs     defaults        0       0
+UUID=c00f6d45-2b4f-4dd2-ac41-3860838089f4       /boot   xfs     defaults,rw     0       0
+/dev/mapper/swapVg-swapLv       swap    swap    defaults        0       0
+/dev/u01Vg/u01Lv        /u01    ext4    defaults        0       0
+/dev/u02Vg/u02Lv        /u02    ext4    defaults        0       0
+#//10.133.39.37/d$/ImageMgr/PhotoRepo   /mnt/PhotoRepo  cifs    rw,credentials=/etc/samba/.smbclient.conf,file_mode=0777,dir_mode=0777,uid=lfladmin,gid=lfladmin 0       0
+//LVWSNASALFSPD01.ALPHA.LFTLTD.NET/isgpd$/Images/ImageMgr/PhotoRepo   /mnt/PhotoRepo      cifs    rw,credentials=/etc/samba/.smbclient_nas.conf,file_mode=0777,dir_mode=0777,uid=lfladmin,gid=lfladmin        0       0
+[root@LVWSBLRALRDPD01 ~]# lsblk
+NAME              MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
+nvme0n1           259:16   0    80G  0 disk
+├─nvme0n1p1       259:17   0     1G  0 part /boot
+└─nvme0n1p2       259:18   0    79G  0 part
+  └─rootVg-root   253:0    0    79G  0 lvm  /
+nvme1n1           259:0    0   100G  0 disk
+├─nvme1n1p1       259:1    0    50G  0 part
+│ └─u02Vg-u02Lv   253:3    0 549.9G  0 lvm  /u02
+└─nvme1n1p2       259:19   0    50G  0 part
+  └─u02Vg-u02Lv   253:3    0 549.9G  0 lvm  /u02
+nvme2n1           259:2    0   100G  0 disk
+└─nvme2n1p1       259:3    0   100G  0 part
+  └─u01Vg-u01Lv   253:2    0 399.9G  0 lvm  /u01
+nvme3n1           259:4    0    64G  0 disk
+└─nvme3n1p1       259:5    0    64G  0 part
+  └─swapVg-swapLv 253:1    0    64G  0 lvm  [SWAP]
+nvme4n1           259:6    0   200G  0 disk
+├─nvme4n1p1       259:7    0   100G  0 part
+│ └─u01Vg-u01Lv   253:2    0 399.9G  0 lvm  /u01
+└─nvme4n1p2       259:8    0   100G  0 part
+  └─u01Vg-u01Lv   253:2    0 399.9G  0 lvm  /u01
+nvme5n1           259:9    0   300G  0 disk
+└─nvme5n1p1       259:10   0   300G  0 part
+  └─u02Vg-u02Lv   253:3    0 549.9G  0 lvm  /u02
+nvme6n1           259:12   0   150G  0 disk
+├─nvme6n1p1       259:14   0   100G  0 part
+│ └─u02Vg-u02Lv   253:3    0 549.9G  0 lvm  /u02
+└─nvme6n1p2       259:15   0    50G  0 part
+  └─u02Vg-u02Lv   253:3    0 549.9G  0 lvm  /u02
+nvme7n1           259:11   0   100G  0 disk
+└─nvme7n1p1       259:13   0   100G  0 part
+  └─u01Vg-u01Lv   253:2    0 399.9G  0 lvm  /u01
+[root@LVWSBLRALRDPD01 ~]#
+
+
+
+[root@LVWSBLRALRDPD01 ~]# smartctl --all /dev/nvme4n1 |grep Serial
+Serial Number:                      vol0c1a7fc594705c472		/dev/sdc	200		/dev/sdc=snap-0e3a86fbe0fae9005:200:false:gp3:encrypted	新vol-043453b196c071b87
+[root@LVWSBLRALRDPD01 ~]# smartctl --all /dev/nvme2n1|grep Serial
+Serial Number:                      vol0d00ff20332b84a5b		/dev/sdg	100		/dev/sdg=snap-0a49191618f49c7ce:100:false:gp3:encrypted	新vol-049f7a63868521896
+[root@LVWSBLRALRDPD01 ~]# smartctl --all /dev/nvme7n1|grep Serial
+Serial Number:                      vol05a752e61de181a62		/dev/sde	100		/dev/sde=snap-0fb4d346e2b9ca044:100:false:gp3:encrypted	新vol-037c8275d121c0e40
+
+
+步骤：
+prepare: 在/etc/fstab里注释掉/u01的开机自动挂载
+1. Stop the instance;
+2. Detach the old volumes;
+3. Attach the new restored volumes;
+4. Start the instance;
+5. 在/etc/fstab里启动/u01的开机自动挂载，mount -a生效
+6. df -h和lsblk查看/u01(上一步挂载生效后才可以看到)
+
+
+
+
+
+  
+
