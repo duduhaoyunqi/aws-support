@@ -1,0 +1,38 @@
+感谢您联系亚马逊技术支持，我是云端技术支援工程师Robert，很高兴今天可以为您提供帮助。
+ 
+=== 问题描述 ===
+我们理解您想要了解，如何通过AMI恢复实例并保持原有ip的方法，如果我的理解有错误，请纠正我。
+
+
+=== 问题回覆 ===
+
+A.若您希望保持原有的ip是public IP:
+	一般来说实例中是使用auto-assign，在关机后ip会自动释放出来，是无法保留相同ip的。
+	为了要保持原有ip建议您可以转为使用Elastic IP，关于如何使用请参考资料[1]，将来可以在不同实例之间转移[2]。
+
+B.若您希望保持原有的ip是private IP:
+	由于Linux EC2上的eth0是不能删除的，无法做到您希望的把旧的网卡unassign。
+	
+	您可以在启动实例时指定私有ip，但需要先将占有此ip的实例删除后才能指定此ip[3]。
+	因此在删除原有实例前，强烈建议需要先备份您原实例中的资料，可以透过AMI备份资料，备份方法请见参考资料[4]。
+	将原占有此IP的实例Terminate后，再透过AMI恢复实例，启动时需要手动指定您希望使用的原IP。
+	请见参考资料[5]，第七步中，建立新的实例时，在advance中手动指定网段，再指定您希望的原有IP。
+
+	建议您先拿测试环境的实例来做测试，执行调整前，务必在原本的机器上先做备份的动作。
+
+参考文件:
+
+[1]Allocate an Elastic IP address
+https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-ip-addresses-eip.html#using-instance-addressing-eips-allocating 
+
+[2]How do I move an Elastic IP address to a different EC2 instance?
+https://repost.aws/knowledge-center/ec2-move-elastic-ip 
+
+[3]How do I change the primary private IP address of my Amazon EC2 instance?
+https://repost.aws/knowledge-center/ec2-change-primary-ip 
+
+[4]Create an AMI from an Amazon EC2 Instance
+https://docs.aws.amazon.com/toolkit-for-visual-studio/latest/user-guide/tkv-create-ami-from-instance.html 
+
+[5]How do I launch an EC2 instance from a custom AMI?
+https://repost.aws/knowledge-center/launch-instance-custom-ami 
