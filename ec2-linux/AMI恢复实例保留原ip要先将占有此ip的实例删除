@@ -36,3 +36,11 @@ https://docs.aws.amazon.com/toolkit-for-visual-studio/latest/user-guide/tkv-crea
 
 [5]How do I launch an EC2 instance from a custom AMI?
 https://repost.aws/knowledge-center/launch-instance-custom-ami 
+
+#################################################################################
+
+尊敬的客户您好，
+
+感谢您的回复。
+
+在实例没有被终止的情况下，它的主网络接口（index 0）是无法被分离的。
