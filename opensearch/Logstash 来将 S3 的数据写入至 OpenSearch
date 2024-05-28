@@ -2,6 +2,7 @@ Question:
 如何实现通过从实例上的logstash从alb日志或WAF日志的S3存储桶中采集数据推送到opensearch。
 
 ######################################################################
+Send alb logs to elk with logstash:  https://youtu.be/wTcspUWJPxQ?si=qNWr05IpgkoZr_tw 
 
 尊敬的客户您好，
 
