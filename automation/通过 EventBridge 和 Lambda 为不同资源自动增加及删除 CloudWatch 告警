@@ -1,0 +1,37 @@
+
+
+
+import json
+
+def lambda_handler(event, context):
+    event_detail = event.get('detail', {})
+
+    # Check whether the source is ec2 or elb
+    if 'source' in event and event['source'] == 'aws.ec2':
+
+        # Check whether the event is CreateVolume or RunInstances
+        if event_detail['eventName'] == 'CreateVolume':
+            # Print the volumeId
+            print("eventName: "+event_detail['eventName'])
+            print("volumeId: "+event_detail['responseElements']['volumeId'])
+
+        elif event_detail['eventName'] == 'RunInstances':
+            # Print the instanceId and instanceName
+            print("eventName: "+event_detail['eventName'])
+            print("instanceId: "+event_detail['responseElements']['instancesSet']['items'][0]['instanceId'])
+            print("instanceName: "+event_detail['responseElements']['instancesSet']['items'][0]['tagSet']['items'][0]['value'])
+
+        else:
+            print("Invalid Event")
+        
+    elif 'source' in event and event['source'] == 'aws.elasticloadbalancing':
+        # Print the loadBalancerArn and targetGroupArn
+        print("eventName: "+event_detail['eventName'])
+        for i in event_detail['responseElements']['listeners']:
+            print("loadBalancerArn: "+i['loadBalancerArn'])
+            for j in i['defaultActions']:
+                print("targetGroupArn: "+j['targetGroupArn'])
+
+    else:
+
+        print("This Lambda function is not triggered by EventBridge.")
