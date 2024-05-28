@@ -1,5 +1,48 @@
 
+Plugins 您好，
 
+感谢您联系 AWS 技术支持团队！我是 Edwin，很高兴能够在这个案例上协助您。
+
+在稍前的线上会议中，我了解您有以下需求：
+
+您的最终目的是希望通过 EventBridge 和 Lambda 的架构来为不同资源（例如：EC2，EBS，ELB）自动增加及删除 CloudWatch 告警。 
+
+由于整个架构牵涉的部件比较多，我建议了我们可以先从以下两个方向入手：
+
+1. 定义 EventBridge 的规则
+我在实验环境中进行了不同测试，以下为各项情景对应的 API：
+- 启动新的 EC2 实例：RunInstances [1]
+- 创建新的 EBS Volume：CreateVolume [2] 
+- 创建新的 ELB 或把 TargetGroup 挂到现有的 ELB 上：CreateListener [3]
+
+基于以上的 API 内容，我认为相应的 EventBridge Pattern （事件模式 ）可以是这样：
+
+{
+  "source": ["aws.ec2", "aws.elasticloadbalancing"],
+  "detail-type": ["AWS API Call via CloudTrail"],
+  "detail": {
+    "eventName": ["CreateVolume", "RunInstances", "CreateListener"]
+  }
+}
+
+以上的事件模式将只会匹配到三类型的 API 事件，后续我们可以再加入其他删除的事件（例如：DeleteVolume）。
+
+2. 定义 Lambda 的框架
+根据第一步定义的事件模式，理论上只有三类型的事件会被传到 Lambda，我后续再跟据了这三类型的事件研究了 Lambda 的框架，思路大概是：
+- 先判定事件的 'source' 栏位，目前我注意到 EC2 跟 EBS 都是 'aws.ec2'，ELB 则是 'aws.elasticloadbalancing'
+- 然后抓取不同的变量并打印出来 
+- 详细的内容您可以参考附件
+
+您可以先参考一下我的建议来配置一下 EventBridge 规则跟 Lambda 函数，如果您有任何疑问或需要进一步的协助，欢迎您随时通过案例回复，我将持续跟进。
+
+感谢您对 AWS 技术支持团队的支持！
+
+参考文档：
+[1] https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RunInstances.html 
+[2] https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateVolume.html 
+[3] https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateListener.html 
+
+###################################################################
 
 import json
 
