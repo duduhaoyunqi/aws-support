@@ -1,4 +1,4 @@
-可以看出Cloudtrail日志就是LogGroup日志detail键的值：
+可以看出Cloudtrail日志就是LogGroup日志字典的detail键的值：
 
 ##########################################################################
 Cloudtrail日志：
