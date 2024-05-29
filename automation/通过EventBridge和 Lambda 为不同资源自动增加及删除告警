@@ -105,6 +105,7 @@ def lambda_handler(event, context):
             # print("instanceId: "+event_detail['responseElements']['instancesSet']['items'][0]['instanceId'])
 
             sns_topic_arn = "arn:aws:sns:ap-southeast-1:259130762176:ConsoleLoginAlert"
+            recover_action = "arn:aws:automate:ap-southeast-1:ec2:recover"
             
             instanceId = event_detail['responseElements']['instancesSet']['items'][0]['instanceId']
 
@@ -130,7 +131,7 @@ def lambda_handler(event, context):
             "AlarmName": alarm_name,
             "ActionsEnabled": True,
             "OKActions": [sns_topic_arn],
-            "AlarmActions": [sns_topic_arn],
+            "AlarmActions": [sns_topic_arn,recover_action],
             "InsufficientDataActions": [],
             "MetricName": "StatusCheckFailed_System",
             "Namespace": "AWS/EC2",
@@ -151,6 +152,103 @@ def lambda_handler(event, context):
             # Create the alarm
             response = cwclient.put_metric_alarm(
                 **alarm_properties
+            )
+            print(response)
+        else:
+            print("Invalid Event")
+    else:
+        print("This Lambda function is not triggered by EventBridge.")   
+        
+    return {
+        'statusCode': 200,
+        'body': 'Alarm creation process completed.'
+    }
+
+######################################################################
+测试当实例创建时自动化创建两个告警system和instance alarm：
+
+import json
+import boto3
+
+# Create CloudWatch client
+cwclient = boto3.client('cloudwatch')
+ec2client = boto3.client('ec2')
+
+
+def lambda_handler(event, context):
+    event_detail = event.get('detail', {})
+
+    # Check whether the source is ec2 or elb
+    # 字典里有这个source键？并且source键的值为aws.ec2
+    if 'source' in event and event['source'] == 'aws.ec2':
+        # Check whether the event is CreateVolume or RunInstances
+        if event_detail['eventName'] == 'RunInstances':
+            # Print the instanceId
+            # print("eventName: "+event_detail['eventName'])
+            # print("instanceId: "+event_detail['responseElements']['instancesSet']['items'][0]['instanceId'])
+
+            sns_topic_arn = "arn:aws:sns:ap-southeast-1:259130762176:ConsoleLoginAlert"
+            recover_action = "arn:aws:automate:ap-southeast-1:ec2:recover"
+            instanceId = event_detail['responseElements']['instancesSet']['items'][0]['instanceId']
+            instanceName = event_detail['responseElements']['instancesSet']['items'][0]['tagSet']['items'][0]['value']
+            print(instanceName)
+
+            system_alarm_name = f"(S3)EC2:StatusCheckFailed_System:*:{instanceName}"
+            instance_alarm_name = f"(S3)EC2:StatusCheckFailed_Instance:*:{instanceName}"
+            
+            system_alarm_properties = {
+            "AlarmName": system_alarm_name,
+            "ActionsEnabled": True,
+            "OKActions": [sns_topic_arn],
+            "AlarmActions": [sns_topic_arn,recover_action],
+            "InsufficientDataActions": [],
+            "MetricName": "StatusCheckFailed_System",
+            "Namespace": "AWS/EC2",
+            "Statistic": "Maximum",
+            "Dimensions": [
+                {
+                    "Name": "InstanceId",
+                    "Value": instanceId
+                }
+            ],
+            "Period": 60,
+            "EvaluationPeriods": 1,
+            "DatapointsToAlarm": 1,
+            "Threshold": 0,
+            "ComparisonOperator": "GreaterThanThreshold",
+            "TreatMissingData": "missing"
+            }
+            # Create the system alarm
+            response = cwclient.put_metric_alarm(
+                **system_alarm_properties
+            )
+            print(response)
+
+            instance_alarm_properties = {
+                "AlarmName": instance_alarm_name,
+                "ActionsEnabled": True,
+                "OKActions": [sns_topic_arn],
+                "AlarmActions": [sns_topic_arn],
+                "InsufficientDataActions": [],
+                "MetricName": "StatusCheckFailed_Instance",
+                "Namespace": "AWS/EC2",
+                "Statistic": "Maximum",
+                "Dimensions": [
+                    {
+                        "Name": "InstanceId",
+                        "Value": instanceId
+                    }
+                ],
+                "Period": 60,
+                "EvaluationPeriods": 6,
+                "DatapointsToAlarm": 6,
+                "Threshold": 0,
+                "ComparisonOperator": "GreaterThanThreshold",
+                "TreatMissingData": "breaching"
+            }  
+             # Create the instance alarm
+            response = cwclient.put_metric_alarm(
+                **instance_alarm_properties
             )
             print(response)
         else:
