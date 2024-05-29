@@ -1,0 +1,540 @@
+##########################################################################
+Cloudtrail：
+##########################################################################
+{
+    "eventVersion": "1.09",
+    "userIdentity": {
+        "type": "AssumedRole",
+        "principalId": "AROA6NJJL3E4CRNYODI4M:v-TiraLi@lflogistics.com",
+        "arn": "arn:aws:sts::990613592376:assumed-role/AWSReservedSSO_MaerskOCFMPAdmin_ed88d13b4155b43b/v-TiraLi@lflogistics.com",
+        "accountId": "990613592376",
+        "accessKeyId": "ASIA6NJJL3E4DQDPZWE6",
+        "sessionContext": {
+            "sessionIssuer": {
+                "type": "Role",
+                "principalId": "AROA6NJJL3E4CRNYODI4M",
+                "arn": "arn:aws:iam::990613592376:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_MaerskOCFMPAdmin_ed88d13b4155b43b",
+                "accountId": "990613592376",
+                "userName": "AWSReservedSSO_MaerskOCFMPAdmin_ed88d13b4155b43b"
+            },
+            "attributes": {
+                "creationDate": "2024-05-16T18:27:26Z",
+                "mfaAuthenticated": "false"
+            }
+        }
+    },
+    "eventTime": "2024-05-16T18:43:43Z",
+    "eventSource": "ec2.amazonaws.com",
+    "eventName": "RunInstances",
+    "awsRegion": "ap-southeast-1",
+    "sourceIPAddress": "116.228.99.74",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "requestParameters": {
+        "instancesSet": {
+            "items": [
+                {
+                    "imageId": "ami-0a95d2cc973f39afc",
+                    "minCount": 1,
+                    "maxCount": 1,
+                    "keyName": "tiratest"
+                }
+            ]
+        },
+        "instanceType": "t3.medium",
+        "blockDeviceMapping": {
+            "items": [
+                {
+                    "deviceName": "/dev/xvda",
+                    "ebs": {
+                        "snapshotId": "snap-010c6c30cd037d289",
+                        "volumeSize": 8,
+                        "deleteOnTermination": true,
+                        "volumeType": "gp3",
+                        "iops": 3000,
+                        "encrypted": true,
+                        "kmsKeyId": "arn:aws:kms:ap-southeast-1:394783923101:key/615fd665-5897-4345-aefe-f3b7585a0ec0",
+                        "throughput": 125
+                    }
+                }
+            ]
+        },
+        "monitoring": {
+            "enabled": false
+        },
+        "disableApiTermination": false,
+        "disableApiStop": false,
+        "clientToken": "e400bb9b-b312-470c-820f-be77d9bcd6ac",
+        "networkInterfaceSet": {
+            "items": [
+                {
+                    "deviceIndex": 0,
+                    "subnetId": "subnet-0fd889f86e9f1cd5d",
+                    "associatePublicIpAddress": false,
+                    "groupSet": {
+                        "items": [
+                            {
+                                "groupId": "sg-01bd47938766c69a7"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "ebsOptimized": true,
+        "tagSpecificationSet": {
+            "items": [
+                {
+                    "resourceType": "instance",
+                    "tags": [
+                        {
+                            "key": "Name",
+                            "value": "testrescure"
+                        },
+                        {
+                            "key": "Environment",
+                            "value": "FbM_QA"
+                        },
+                        {
+                            "key": "Portfolio",
+                            "value": "FulfilmentPlatform"
+                        },
+                        {
+                            "key": "Platform",
+                            "value": "FulfilmentPlatform"
+                        },
+                        {
+                            "key": "Account",
+                            "value": "FbM_QA"
+                        },
+                        {
+                            "key": "Product",
+                            "value": "WMS_SCE"
+                        }
+                    ]
+                }
+            ]
+        },
+        "metadataOptions": {
+            "httpTokens": "required",
+            "httpPutResponseHopLimit": 2,
+            "httpEndpoint": "enabled"
+        },
+        "privateDnsNameOptions": {
+            "hostnameType": "ip-name",
+            "enableResourceNameDnsARecord": false,
+            "enableResourceNameDnsAAAARecord": false
+        }
+    },
+    "responseElements": {
+        "requestId": "80da137e-a43e-475b-b202-4622a982be46",
+        "reservationId": "r-0c43dd82ad718f12e",
+        "ownerId": "990613592376",
+        "groupSet": {},
+        "instancesSet": {
+            "items": [
+                {
+                    "instanceId": "i-04ccd5d27dbd9fd5c",
+                    "imageId": "ami-0a95d2cc973f39afc",
+                    "currentInstanceBootMode": "legacy-bios",
+                    "instanceState": {
+                        "code": 0,
+                        "name": "pending"
+                    },
+                    "privateDnsName": "ip-10-157-89-84.ap-southeast-1.compute.internal",
+                    "keyName": "tiratest",
+                    "amiLaunchIndex": 0,
+                    "productCodes": {},
+                    "instanceType": "t3.medium",
+                    "launchTime": 1715885023000,
+                    "placement": {
+                        "availabilityZone": "ap-southeast-1a",
+                        "tenancy": "default"
+                    },
+                    "monitoring": {
+                        "state": "disabled"
+                    },
+                    "subnetId": "subnet-0fd889f86e9f1cd5d",
+                    "vpcId": "vpc-085b94492a8807e11",
+                    "privateIpAddress": "10.157.89.84",
+                    "stateReason": {
+                        "code": "pending",
+                        "message": "pending"
+                    },
+                    "architecture": "x86_64",
+                    "rootDeviceType": "ebs",
+                    "rootDeviceName": "/dev/xvda",
+                    "blockDeviceMapping": {},
+                    "virtualizationType": "hvm",
+                    "hypervisor": "xen",
+                    "tagSet": {
+                        "items": [
+                            {
+                                "key": "Portfolio",
+                                "value": "FulfilmentPlatform"
+                            },
+                            {
+                                "key": "Name",
+                                "value": "testrescure"
+                            },
+                            {
+                                "key": "Platform",
+                                "value": "FulfilmentPlatform"
+                            },
+                            {
+                                "key": "Environment",
+                                "value": "FbM_QA"
+                            },
+                            {
+                                "key": "Account",
+                                "value": "FbM_QA"
+                            },
+                            {
+                                "key": "Product",
+                                "value": "WMS_SCE"
+                            }
+                        ]
+                    },
+                    "clientToken": "e400bb9b-b312-470c-820f-be77d9bcd6ac",
+                    "groupSet": {
+                        "items": [
+                            {
+                                "groupId": "sg-01bd47938766c69a7",
+                                "groupName": "sgpawsgqfbminframgmt01"
+                            }
+                        ]
+                    },
+                    "sourceDestCheck": true,
+                    "networkInterfaceSet": {
+                        "items": [
+                            {
+                                "networkInterfaceId": "eni-0e87d6295a7415ad1",
+                                "subnetId": "subnet-0fd889f86e9f1cd5d",
+                                "vpcId": "vpc-085b94492a8807e11",
+                                "ownerId": "990613592376",
+                                "status": "in-use",
+                                "macAddress": "02:a9:94:fa:d8:27",
+                                "privateIpAddress": "10.157.89.84",
+                                "privateDnsName": "ip-10-157-89-84.ap-southeast-1.compute.internal",
+                                "sourceDestCheck": true,
+                                "interfaceType": "interface",
+                                "groupSet": {
+                                    "items": [
+                                        {
+                                            "groupId": "sg-01bd47938766c69a7",
+                                            "groupName": "sgpawsgqfbminframgmt01"
+                                        }
+                                    ]
+                                },
+                                "attachment": {
+                                    "attachmentId": "eni-attach-0fadb088f52f33d9c",
+                                    "deviceIndex": 0,
+                                    "networkCardIndex": 0,
+                                    "status": "attaching",
+                                    "attachTime": 1715885023000,
+                                    "deleteOnTermination": true
+                                },
+                                "privateIpAddressesSet": {
+                                    "item": [
+                                        {
+                                            "privateIpAddress": "10.157.89.84",
+                                            "privateDnsName": "ip-10-157-89-84.ap-southeast-1.compute.internal",
+                                            "primary": true
+                                        }
+                                    ]
+                                },
+                                "ipv6AddressesSet": {},
+                                "tagSet": {}
+                            }
+                        ]
+                    },
+                    "ebsOptimized": true,
+                    "enaSupport": true,
+                    "cpuOptions": {
+                        "coreCount": 1,
+                        "threadsPerCore": 2
+                    },
+                    "capacityReservationSpecification": {
+                        "capacityReservationPreference": "open"
+                    },
+                    "enclaveOptions": {
+                        "enabled": false
+                    },
+                    "metadataOptions": {
+                        "state": "pending",
+                        "httpTokens": "required",
+                        "httpPutResponseHopLimit": 2,
+                        "httpEndpoint": "enabled",
+                        "httpProtocolIpv4": "enabled",
+                        "httpProtocolIpv6": "disabled",
+                        "instanceMetadataTags": "disabled"
+                    },
+                    "maintenanceOptions": {
+                        "autoRecovery": "default"
+                    },
+                    "privateDnsNameOptions": {
+                        "hostnameType": "ip-name",
+                        "enableResourceNameDnsARecord": false,
+                        "enableResourceNameDnsAAAARecord": false
+                    }
+                }
+            ]
+        }
+    },
+    "requestID": "80da137e-a43e-475b-b202-4622a982be46",
+    "eventID": "9bbbe5d6-0fb4-4d18-a753-94ed4149ab01",
+    "readOnly": false,
+    "eventType": "AwsApiCall",
+    "managementEvent": true,
+    "recipientAccountId": "990613592376",
+    "eventCategory": "Management",
+    "tlsDetails": {
+        "tlsVersion": "TLSv1.3",
+        "cipherSuite": "TLS_AES_128_GCM_SHA256",
+        "clientProvidedHostHeader": "ec2.ap-southeast-1.amazonaws.com"
+    },
+    "sessionCredentialFromConsole": "true"
+}
+
+##########################################################################
+LogGroup：
+##########################################################################
+
+{
+    "version": "0",
+    "id": "5a70aaba-9218-9594-b2ee-3b008c674c1c",
+    "detail-type": "AWS API Call via CloudTrail",
+    "source": "aws.ec2",
+    "account": "259130762176",
+    "time": "2024-05-29T03:28:25Z",
+    "region": "ap-southeast-1",
+    "resources": [],
+    "detail": {
+        "eventVersion": "1.09",
+        "userIdentity": {
+            "type": "IAMUser",
+            "principalId": "AIDATYVLFUPAJ3FPDFXGA",
+            "arn": "arn:aws:iam::259130762176:user/Key_Diao",
+            "accountId": "259130762176",
+            "accessKeyId": "ASIATYVLFUPAEB5SIQ72",
+            "userName": "Key_Diao",
+            "sessionContext": {
+                "attributes": {
+                    "creationDate": "2024-05-29T02:50:23Z",
+                    "mfaAuthenticated": "false"
+                }
+            }
+        },
+        "eventTime": "2024-05-29T03:28:25Z",
+        "eventSource": "ec2.amazonaws.com",
+        "eventName": "RunInstances",
+        "awsRegion": "ap-southeast-1",
+        "sourceIPAddress": "193.122.100.239",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.289 Safari/537.36",
+        "requestParameters": {
+            "instancesSet": {
+                "items": [
+                    {
+                        "imageId": "ami-0f72303a696696fd3",
+                        "minCount": 1,
+                        "maxCount": 1
+                    }
+                ]
+            },
+            "instanceType": "t2.micro",
+            "blockDeviceMapping": {},
+            "monitoring": {
+                "enabled": false
+            },
+            "disableApiTermination": false,
+            "disableApiStop": false,
+            "clientToken": "df3ffdb5-51a2-4008-98ba-2e3f5583d248",
+            "networkInterfaceSet": {
+                "items": [
+                    {
+                        "deviceIndex": 0,
+                        "subnetId": "subnet-0118c6228c47aacbb",
+                        "associatePublicIpAddress": false,
+                        "groupSet": {
+                            "items": [
+                                {
+                                    "groupId": "sg-0bbcf830590f25c29"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "ebsOptimized": false,
+            "tagSpecificationSet": {
+                "items": [
+                    {
+                        "resourceType": "instance",
+                        "tags": [
+                            {
+                                "key": "Name",
+                                "value": "test"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "metadataOptions": {
+                "httpTokens": "required",
+                "httpPutResponseHopLimit": 2,
+                "httpEndpoint": "enabled"
+            },
+            "privateDnsNameOptions": {
+                "hostnameType": "ip-name",
+                "enableResourceNameDnsARecord": false,
+                "enableResourceNameDnsAAAARecord": false
+            }
+        },
+        "responseElements": {
+            "requestId": "e57d7a0c-0f85-4e9b-be5a-068207ba4329",
+            "reservationId": "r-002c48f9aa80febdd",
+            "ownerId": "259130762176",
+            "groupSet": {},
+            "instancesSet": {
+                "items": [
+                    {
+                        "instanceId": "i-0874bb502f0444cc7",
+                        "imageId": "ami-0f72303a696696fd3",
+                        "currentInstanceBootMode": "legacy-bios",
+                        "instanceState": {
+                            "code": 0,
+                            "name": "pending"
+                        },
+                        "privateDnsName": "ip-10-101-255-29.ap-southeast-1.compute.internal",
+                        "amiLaunchIndex": 0,
+                        "productCodes": {},
+                        "instanceType": "t2.micro",
+                        "launchTime": 1716953305000,
+                        "placement": {
+                            "availabilityZone": "ap-southeast-1b",
+                            "tenancy": "default"
+                        },
+                        "monitoring": {
+                            "state": "disabled"
+                        },
+                        "subnetId": "subnet-0118c6228c47aacbb",
+                        "vpcId": "vpc-0494be10f56f6f4c1",
+                        "privateIpAddress": "10.101.255.29",
+                        "stateReason": {
+                            "code": "pending",
+                            "message": "pending"
+                        },
+                        "architecture": "x86_64",
+                        "rootDeviceType": "ebs",
+                        "rootDeviceName": "/dev/xvda",
+                        "blockDeviceMapping": {},
+                        "virtualizationType": "hvm",
+                        "hypervisor": "xen",
+                        "tagSet": {
+                            "items": [
+                                {
+                                    "key": "Name",
+                                    "value": "test"
+                                }
+                            ]
+                        },
+                        "clientToken": "df3ffdb5-51a2-4008-98ba-2e3f5583d248",
+                        "groupSet": {
+                            "items": [
+                                {
+                                    "groupId": "sg-0bbcf830590f25c29",
+                                    "groupName": "default"
+                                }
+                            ]
+                        },
+                        "sourceDestCheck": true,
+                        "networkInterfaceSet": {
+                            "items": [
+                                {
+                                    "networkInterfaceId": "eni-00461610065f13eb0",
+                                    "subnetId": "subnet-0118c6228c47aacbb",
+                                    "vpcId": "vpc-0494be10f56f6f4c1",
+                                    "ownerId": "259130762176",
+                                    "status": "in-use",
+                                    "macAddress": "06:3e:1a:7d:06:1b",
+                                    "privateIpAddress": "10.101.255.29",
+                                    "privateDnsName": "ip-10-101-255-29.ap-southeast-1.compute.internal",
+                                    "sourceDestCheck": true,
+                                    "interfaceType": "interface",
+                                    "groupSet": {
+                                        "items": [
+                                            {
+                                                "groupId": "sg-0bbcf830590f25c29",
+                                                "groupName": "default"
+                                            }
+                                        ]
+                                    },
+                                    "attachment": {
+                                        "attachmentId": "eni-attach-09d7d1350225d9694",
+                                        "deviceIndex": 0,
+                                        "networkCardIndex": 0,
+                                        "status": "attaching",
+                                        "attachTime": 1716953305000,
+                                        "deleteOnTermination": true
+                                    },
+                                    "privateIpAddressesSet": {
+                                        "item": [
+                                            {
+                                                "privateIpAddress": "10.101.255.29",
+                                                "privateDnsName": "ip-10-101-255-29.ap-southeast-1.compute.internal",
+                                                "primary": true
+                                            }
+                                        ]
+                                    },
+                                    "ipv6AddressesSet": {},
+                                    "tagSet": {}
+                                }
+                            ]
+                        },
+                        "ebsOptimized": false,
+                        "enaSupport": true,
+                        "cpuOptions": {
+                            "coreCount": 1,
+                            "threadsPerCore": 1
+                        },
+                        "capacityReservationSpecification": {
+                            "capacityReservationPreference": "open"
+                        },
+                        "enclaveOptions": {
+                            "enabled": false
+                        },
+                        "metadataOptions": {
+                            "state": "pending",
+                            "httpTokens": "required",
+                            "httpPutResponseHopLimit": 2,
+                            "httpEndpoint": "enabled",
+                            "httpProtocolIpv4": "enabled",
+                            "httpProtocolIpv6": "disabled",
+                            "instanceMetadataTags": "disabled"
+                        },
+                        "maintenanceOptions": {
+                            "autoRecovery": "default"
+                        },
+                        "privateDnsNameOptions": {
+                            "hostnameType": "ip-name",
+                            "enableResourceNameDnsARecord": false,
+                            "enableResourceNameDnsAAAARecord": false
+                        }
+                    }
+                ]
+            }
+        },
+        "requestID": "e57d7a0c-0f85-4e9b-be5a-068207ba4329",
+        "eventID": "c1d894b1-a2c5-4560-8593-282b8858a2f1",
+        "readOnly": false,
+        "eventType": "AwsApiCall",
+        "managementEvent": true,
+        "recipientAccountId": "259130762176",
+        "eventCategory": "Management",
+        "tlsDetails": {
+            "tlsVersion": "TLSv1.3",
+            "cipherSuite": "TLS_AES_128_GCM_SHA256",
+            "clientProvidedHostHeader": "ec2.ap-southeast-1.amazonaws.com"
+        },
+        "sessionCredentialFromConsole": "true"
+    }
+}
