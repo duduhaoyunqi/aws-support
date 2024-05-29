@@ -4,3 +4,38 @@
 $ aws ec2 describe-tags --region ap-southeast-1 --filters "Name=resource-id,Values=i-0e2d9477522cfb3a9" "Name=key,Values=Name" --output text | cut -f5
 wufbmatmsweb02
 #先通过instanceId拿到所有tags，再通过key=Name拿到Name的值。
+
+#######################################################################
+
+您好，
+
+我是 AWS 技术支持工程师 Harry，很高兴能协助您。
+
+以下是我透過您提供的CLI，修改成為boto3程式碼如下。
+
+import boto3
+
+# 设定您的区域和实例 ID
+region = '您的区域名称'
+instance_id = '您的实例 ID'
+
+# 创建一个 EC2 服务客户端
+ec2 = boto3.client('ec2', region_name=region)
+
+# 使用 describe_tags 方法检索标签
+response = ec2.describe_tags(
+    Filters=[
+        {
+            'Name': 'resource-id',
+            'Values': [instance_id]
+        },
+        {
+            'Name': 'key',
+            'Values': ['Name']
+        }
+    ]
+)
+
+# 从回应中提取标签的值
+tag_value = response['Tags'][0]['Value'] if response['Tags'] else None
+print(tag_value)
