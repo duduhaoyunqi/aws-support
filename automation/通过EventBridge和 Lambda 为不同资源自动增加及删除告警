@@ -79,3 +79,86 @@ def lambda_handler(event, context):
     else:
 
         print("This Lambda function is not triggered by EventBridge.")
+
+
+############################################################################################
+测试创建一个实例成功自动添加告警：
+
+import json
+import boto3
+
+# Create CloudWatch client
+cwclient = boto3.client('cloudwatch')
+ec2client = boto3.client('ec2')
+
+
+def lambda_handler(event, context):
+    event_detail = event.get('detail', {})
+
+    # Check whether the source is ec2 or elb
+    # 字典里有这个source键？并且source键的值为aws.ec2
+    if 'source' in event and event['source'] == 'aws.ec2':
+        # Check whether the event is CreateVolume or RunInstances
+        if event_detail['eventName'] == 'RunInstances':
+            # Print the instanceId
+            # print("eventName: "+event_detail['eventName'])
+            # print("instanceId: "+event_detail['responseElements']['instancesSet']['items'][0]['instanceId'])
+
+            sns_topic_arn = "arn:aws:sns:ap-southeast-1:259130762176:ConsoleLoginAlert"
+            
+            instanceId = event_detail['responseElements']['instancesSet']['items'][0]['instanceId']
+
+            #调用describe_tags通过实例id拿到实例Name
+            response = ec2client.describe_tags(
+                Filters=[
+                    {
+                        'Name': 'resource-id',
+                        'Values': [instanceId],
+                    },
+                    {
+                        'Name': 'key',
+                        'Values': ['Name']
+                    }
+                ]
+            )
+            
+            instanceName = response['Tags'][0]['Value']
+            print(instanceName)
+
+            alarm_name = f"(S3)EC2:StatusCheckFailed_System:*:{instanceName}"
+            alarm_properties = {
+            "AlarmName": alarm_name,
+            "ActionsEnabled": True,
+            "OKActions": [sns_topic_arn],
+            "AlarmActions": [sns_topic_arn],
+            "InsufficientDataActions": [],
+            "MetricName": "StatusCheckFailed_System",
+            "Namespace": "AWS/EC2",
+            "Statistic": "Maximum",
+            "Dimensions": [
+                {
+                    "Name": "InstanceId",
+                    "Value": instanceId
+                }
+            ],
+            "Period": 60,
+            "EvaluationPeriods": 1,
+            "DatapointsToAlarm": 1,
+            "Threshold": 0,
+            "ComparisonOperator": "GreaterThanThreshold",
+            "TreatMissingData": "missing"
+            }
+            # Create the alarm
+            response = cwclient.put_metric_alarm(
+                **alarm_properties
+            )
+            print(response)
+        else:
+            print("Invalid Event")
+    else:
+        print("This Lambda function is not triggered by EventBridge.")   
+        
+    return {
+        'statusCode': 200,
+        'body': 'Alarm creation process completed.'
+    }
