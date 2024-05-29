@@ -39,3 +39,7 @@ response = ec2.describe_tags(
 # 从回应中提取标签的值
 tag_value = response['Tags'][0]['Value'] if response['Tags'] else None
 print(tag_value)
+
+#############################################
+
+instanceName = event_detail['responseElements']['instancesSet']['items'][0]['tagSet']['items'][0]['value']
