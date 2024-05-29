@@ -3,3 +3,4 @@
 
 $ aws ec2 describe-tags --region ap-southeast-1 --filters "Name=resource-id,Values=i-0e2d9477522cfb3a9" "Name=key,Values=Name" --output text | cut -f5
 wufbmatmsweb02
+#先通过instanceId拿到所有tags，再通过key=Name拿到Name的值。
