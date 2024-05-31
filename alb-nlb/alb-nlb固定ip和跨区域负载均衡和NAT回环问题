@@ -1,0 +1,35 @@
+Plugins 您好
+
+感谢联系AWS技术支持，我是工程师Mingkai.
+
+今天在会议中与您沟通了如下问题:
+--在使用 10.133.41.252 连接NLB的节点 10.133.40.124时，遇到连接不通的问题。检查后发现NLB未开启跨区域负载均衡，目标组开启保留客户端IP地址功能，因此来自 10.133.41.252 的请求被NLB路由到它本身，此时源地址和目的地IP地址相同，发生了NAT环回问题[1]。
+如果实例必须将请求发送到它注册到的负载均衡器，请执行下列操作之一：
+    禁用客户端 IP 保留。
+    确保必须相互通信的容器位于不同的容器实例上。
+
+关于问题:请问这两个所谓的eip是需要我们自己创建并绑定nlb 还是aws帮我们创建好的
+目前NLB的两个ENI是AWS帮忙创建的。这是一个可选项，在创建internet-facing NLB 时您可以自己指定EIP或者由AWS帮忙分配。
+在创建internal NLB时，您可以在所选择的子网内指定一个私有IP地址，或者由AWS分配。 而目前您的NLB时internal类型的，所以其使用的是一个私有IP地址，而不是EIP[2]。
+
+参考:
+[1]https://docs.aws.amazon.com/zh_cn/elasticloadbalancing/latest/network/load-balancer-troubleshooting.html#loopback-timeout 
+[2]https://docs.aws.amazon.com/zh_cn/elasticloadbalancing/latest/network/create-network-load-balancer.html#configure-load-balancer 
+
+###############################################################################
+
+如果开启了跨区域负载均衡是否可以正常？
+
+###############################################################################
+
+Plugins 您好，
+
+默认情况下，alb负载均衡器开启了跨区域负载均衡， 而每个nlb负载均衡器节点默认仅在其可用区中的已注册目标之间分配流量。
+如果您开启了跨区域负载均衡，则每个负载均衡器节点会在所有启用的可用区中的注册目标之间分配流量。
+比如节点10.133.40.124(ap-southeast-1b)将客户端请求跨区域负载到不同可用区ap-southeast-1a的target，但是仍有机会路由到节点所在可用区的target。也即是仍有机会遇到源地址和目的地IP地址相同的问题。
+
+参考:
+[1]https://docs.aws.amazon.com/zh_cn/elasticloadbalancing/latest/network/network-load-balancers.html#cross-zone-load-balancing 
+
+##################################################################
+
