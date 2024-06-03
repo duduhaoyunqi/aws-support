@@ -1,0 +1,26 @@
+{
+    "source": "aws.ec2",
+    "detail": {
+        "eventName": "RunInstances",
+        "responseElements": {
+            "instancesSet": {
+                "items": [
+                    {
+                        "instanceId": "i-0b08d9b7d749fa4b9",
+                        "placement": {
+                            "tenancy": "host"
+                        },
+                        "tagSet": {
+                            "items": [
+                                {
+                                    "key": "Name",
+                                    "value": "apigee01"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}
