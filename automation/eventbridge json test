@@ -1,3 +1,5 @@
+#eventbridge传event json到lambda。
+
 {
     "source": "aws.ec2",
     "detail": {
